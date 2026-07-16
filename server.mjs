@@ -1,159 +1,126 @@
-import { createServer } from "node:http";
-import { readFile } from "node:fs/promises";
-import { extname, join, normalize } from "node:path";
-import { fileURLToPath } from "node:url";
+const header = document.querySelector(".site-header");
+const menuButton = document.querySelector(".menu-button");
+const navLinks = document.querySelectorAll(".nav a");
+const checkoutButtons = document.querySelectorAll("[data-checkout]");
+const paymentStatus = document.querySelector(".mp-status");
+const productTabs = document.querySelectorAll("[data-product-tab]");
+const productPanels = document.querySelectorAll("[data-product-panel]");
+const heroSlides = document.querySelectorAll(".hero-slide");
+const categoryLinks = document.querySelectorAll("[data-open-category]");
 
-const root = fileURLToPath(new URL(".", import.meta.url));
+const syncHeader = () => {
+  header.classList.toggle("scrolled", window.scrollY > 18);
+};
 
-const loadEnvFile = async () => {
+menuButton.addEventListener("click", () => {
+  const isOpen = header.classList.toggle("open");
+  menuButton.setAttribute("aria-expanded", String(isOpen));
+});
+
+navLinks.forEach((link) => {
+  link.addEventListener("click", () => {
+    header.classList.remove("open");
+    menuButton.setAttribute("aria-expanded", "false");
+  });
+});
+
+window.addEventListener("scroll", syncHeader, { passive: true });
+syncHeader();
+
+const setProductTab = (selectedTab) => {
+  const selectedCategory = selectedTab.dataset.productTab;
+
+  productTabs.forEach((tab) => {
+    const isActive = tab === selectedTab;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-selected", String(isActive));
+  });
+
+  productPanels.forEach((panel) => {
+    const shouldShow = selectedCategory === "all" || panel.dataset.productPanel === selectedCategory;
+    panel.hidden = !shouldShow;
+    panel.classList.toggle("active", shouldShow);
+  });
+};
+
+productTabs.forEach((tab) => {
+  tab.addEventListener("click", () => setProductTab(tab));
+});
+
+const initialProductTab = document.querySelector("[data-product-tab].active");
+if (initialProductTab) setProductTab(initialProductTab);
+
+let activeHeroSlide = 0;
+let heroSlideTimer;
+
+const showHeroSlide = (index) => {
+  if (!heroSlides.length) return;
+  activeHeroSlide = (index + heroSlides.length) % heroSlides.length;
+
+  heroSlides.forEach((slide, slideIndex) => {
+    slide.classList.toggle("active", slideIndex === activeHeroSlide);
+  });
+};
+
+const startHeroSlider = () => {
+  if (heroSlides.length <= 1) return;
+  window.clearInterval(heroSlideTimer);
+  heroSlideTimer = window.setInterval(() => showHeroSlide(activeHeroSlide + 1), 4200);
+};
+
+categoryLinks.forEach((link) => {
+  link.addEventListener("click", () => {
+    const tab = document.querySelector(`[data-product-tab="${link.dataset.openCategory}"]`);
+    if (tab) setProductTab(tab);
+  });
+});
+
+showHeroSlide(0);
+startHeroSlider();
+
+const formatError = (message) => {
+  if (!paymentStatus) return;
+  paymentStatus.textContent = message;
+};
+
+const startCheckout = async (button) => {
+  const title = button.dataset.title;
+  const unitPrice = Number(button.dataset.price);
+  const originalText = button.textContent;
+
+  button.disabled = true;
+  button.textContent = "Abrindo checkout...";
+  formatError("");
+
   try {
-    const envFile = await readFile(join(root, ".env"), "utf8");
-    envFile
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#"))
-      .forEach((line) => {
-        const separator = line.indexOf("=");
-        if (separator === -1) return;
-        const key = line.slice(0, separator).trim();
-        const value = line.slice(separator + 1).trim();
-        if (key && process.env[key] == null) process.env[key] = value;
-      });
-  } catch {
-    // The .env file is optional; environment variables can be set by the hosting provider.
-  }
-};
-
-await loadEnvFile();
-
-const port = Number(process.env.PORT || 4174);
-const host = process.env.HOST || "0.0.0.0";
-const publicBaseUrl = process.env.PUBLIC_BASE_URL || `http://127.0.0.1:${port}`;
-
-const mimeTypes = {
-  ".css": "text/css; charset=utf-8",
-  ".html": "text/html; charset=utf-8",
-  ".jpeg": "image/jpeg",
-  ".jpg": "image/jpeg",
-  ".js": "text/javascript; charset=utf-8",
-  ".png": "image/png",
-};
-
-const sendJson = (response, status, payload) => {
-  response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
-  response.end(JSON.stringify(payload));
-};
-
-const readJsonBody = async (request) => {
-  const chunks = [];
-  for await (const chunk of request) chunks.push(chunk);
-  return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
-};
-
-const createPreference = async (request, response) => {
-  if (!process.env.MERCADO_PAGO_ACCESS_TOKEN) {
-    sendJson(response, 500, {
-      error: "Configure MERCADO_PAGO_ACCESS_TOKEN para ativar o checkout.",
-    });
-    return;
-  }
-
-  try {
-    const item = await readJsonBody(request);
-    const unitPrice = Number(item.unit_price);
-
-    if (!item.title || !Number.isFinite(unitPrice) || unitPrice <= 0) {
-      sendJson(response, 400, { error: "Produto inválido para checkout." });
-      return;
-    }
-
-    const mercadoPagoResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
+    const response = await fetch("/api/create-preference", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        items: [
-          {
-            title: item.title,
-            quantity: Number(item.quantity || 1),
-            unit_price: unitPrice,
-            currency_id: "BRL",
-          },
-        ],
-        payment_methods: {
-          installments: 6,
-        },
-        back_urls: {
-          success: process.env.CHECKOUT_SUCCESS_URL || `${publicBaseUrl}/#checkout`,
-          pending: process.env.CHECKOUT_PENDING_URL || `${publicBaseUrl}/#checkout`,
-          failure: process.env.CHECKOUT_FAILURE_URL || `${publicBaseUrl}/#checkout`,
-        },
-        auto_return: "approved",
+        title,
+        quantity: 1,
+        unit_price: unitPrice,
       }),
     });
 
-    const preference = await mercadoPagoResponse.json();
+    const data = await response.json();
 
-    if (!mercadoPagoResponse.ok) {
-      sendJson(response, mercadoPagoResponse.status, {
-        error: preference.message || "Erro ao criar pagamento no Mercado Pago.",
-      });
-      return;
+    if (!response.ok || !data.init_point) {
+      throw new Error(data.error || "Não foi possível iniciar o pagamento.");
     }
 
-    sendJson(response, 200, {
-      id: preference.id,
-      init_point: preference.init_point,
-      sandbox_init_point: preference.sandbox_init_point,
-    });
-  } catch {
-    sendJson(response, 500, { error: "Erro inesperado ao iniciar checkout." });
+    window.location.href = data.init_point;
+  } catch (error) {
+    formatError(
+      "Checkout indisponível no momento. Verifique a configuração do Mercado Pago ou chame no WhatsApp."
+    );
+    button.disabled = false;
+    button.textContent = originalText;
   }
 };
 
-const serveStatic = async (request, response) => {
-  const url = new URL(request.url, `http://${request.headers.host}`);
-  const requestedPath = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
-  const filePath = normalize(join(root, requestedPath));
-
-  if (!filePath.startsWith(normalize(root))) {
-    response.writeHead(403);
-    response.end("Acesso negado");
-    return;
-  }
-
-  try {
-    const file = await readFile(filePath);
-    response.writeHead(200, {
-      "Content-Type": mimeTypes[extname(filePath)] || "application/octet-stream",
-    });
-    response.end(file);
-  } catch {
-    response.writeHead(404);
-    response.end("Arquivo não encontrado");
-  }
-};
-
-createServer(async (request, response) => {
-  if (request.method === "GET" && request.url === "/health") {
-    sendJson(response, 200, { status: "ok" });
-    return;
-  }
-
-  if (request.method === "POST" && request.url === "/api/create-preference") {
-    await createPreference(request, response);
-    return;
-  }
-
-  if (request.method === "GET") {
-    await serveStatic(request, response);
-    return;
-  }
-
-  response.writeHead(405);
-  response.end("Método não permitido");
-}).listen(port, host, () => {
-  console.log(`DUO ACTIVE disponível em http://${host}:${port}/`);
+checkoutButtons.forEach((button) => {
+  button.addEventListener("click", () => startCheckout(button));
 });

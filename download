@@ -8,3 +8,5 @@ Thumbs.db
 dist/
 coverage/
 work/
+outputs/duoactive-render-repo*.zip
+outputs/duoactive-render-repo*/
