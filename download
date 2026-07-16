@@ -1,0 +1,10 @@
+.env
+outputs/.env
+node_modules/
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.render/
+dist/
+coverage/
+work/

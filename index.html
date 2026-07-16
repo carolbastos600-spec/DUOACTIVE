@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="DUO ACTIVE - moda fitness com estética minimalista, conforto e energia para se mover."
+    />
+    <title>DUO ACTIVE | Moda fitness</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header" aria-label="Cabeçalho">
+      <a class="brand" href="#inicio" aria-label="DUO ACTIVE">
+        <img src="assets/duo-active-logo-transparent.png" alt="DUO ACTIVE Moda Fitness" />
+      </a>
+      <nav class="nav" aria-label="Navegação principal">
+        <a href="#colecao">Coleção</a>
+        <a href="#beneficios">Sobre</a>
+        <a href="#contato">Contato</a>
+      </nav>
+      <a class="header-action" href="#colecao">Comprar</a>
+      <button class="menu-button" type="button" aria-label="Abrir menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+      </button>
+    </header>
+
+    <main id="inicio">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-overlay">
+          <p class="kicker">@duoactive__</p>
+          <h1 id="hero-title">DUO ACTIVE</h1>
+          <p class="hero-label">Moda fitness</p>
+          <h2>Vista a energia que te move.</h2>
+          <p class="hero-copy">
+            Moda fitness feminina com toque sofisticado, caimento confortável e presença para todos
+            os dias.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#colecao">Ver peças</a>
+            <a class="button secondary" href="https://instagram.com/">Instagram</a>
+          </div>
+        </div>
+        <div class="hero-slider" aria-label="Campanha principal">
+          <figure class="hero-slide active">
+            <img src="assets/hero-activewear.png" alt="Campanha Duo Active com look fitness" />
+          </figure>
+          <figure class="hero-slide">
+            <img src="assets/duo-aura-product.jpeg" alt="Conjunto Duo Aura em fundo neutro" />
+          </figure>
+          <figure class="hero-slide">
+            <img src="assets/campaign-detail.png" alt="Campanha Duo Active editorial" />
+          </figure>
+        </div>
+      </section>
+
+      <section class="category-showcase" aria-labelledby="category-title">
+        <p class="kicker">Moda fitness</p>
+        <h2 id="category-title">Escolha por categoria</h2>
+        <div class="category-grid">
+          <a class="category-card" href="#colecao" data-open-category="shorts-basico">
+            <img src="assets/duo-aura-product.jpeg" alt="Top e short do conjunto Duo Aura" />
+            <span>Conjunto short básico</span>
+          </a>
+          <a class="category-card" href="#colecao" data-open-category="bermuda-bolso">
+            <img src="assets/product-shorts.png" alt="Bermuda fitness Duo Active" />
+            <span>Conjunto bermuda com bolso</span>
+          </a>
+          <a class="category-card" href="#colecao" data-open-category="legging-basica">
+            <img src="assets/product-set.png" alt="Conjunto de legging Duo Active" />
+            <span>Conjunto legging</span>
+          </a>
+          <a class="category-card" href="#colecao" data-open-category="legging-flare">
+            <img src="assets/product-jacket.png" alt="Conjunto flare Duo Active" />
+            <span>Conjunto flare</span>
+          </a>
+          <a class="category-card" href="#colecao" data-open-category="macaquinho">
+            <img src="assets/campaign-detail.png" alt="Macaquinho fitness Duo Active" />
+            <span>Macaquinhos</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="section collections" id="colecoes" aria-labelledby="collections-title">
+        <div class="section-heading">
+          <p class="kicker">Coleções</p>
+          <h2 id="collections-title">Encontre sua próxima combinação favorita.</h2>
+        </div>
+        <div class="collection-grid">
+          <a class="collection-card featured" href="#colecao">
+            <span>Coleção Duo</span>
+            <strong>Ver tudo</strong>
+          </a>
+          <article class="collection-card muted">
+            <span>Próxima coleção</span>
+            <strong>Em breve</strong>
+          </article>
+          <article class="collection-card muted">
+            <span>Novidades</span>
+            <strong>Em breve</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="section collection" id="colecao" aria-labelledby="collection-title">
+        <div class="section-heading">
+          <p class="kicker">Nova seleção</p>
+          <h2 id="collection-title">Peças para acompanhar seu ritmo</h2>
+        </div>
+        <div class="collection-intro">
+          <p>
+            A coleção Duo nasceu para acompanhar mulheres que transformam movimento em autocuidado.
+            Peças que unem conforto, segurança e autenticidade para você se sentir forte em cada
+            treino.
+          </p>
+        </div>
+        <div class="product-tabs" role="tablist" aria-label="Categorias de produtos">
+          <button class="product-tab active" type="button" role="tab" aria-selected="true" data-product-tab="all">
+            Ver tudo
+          </button>
+          <button class="product-tab" type="button" role="tab" aria-selected="false" data-product-tab="shorts-basico">
+            Conjunto de shorts básico
+          </button>
+          <button class="product-tab" type="button" role="tab" aria-selected="false" data-product-tab="legging-basica">
+            Conjunto de legging básica
+          </button>
+          <button class="product-tab" type="button" role="tab" aria-selected="false" data-product-tab="legging-bolso">
+            Conjunto de legging com bolso
+          </button>
+          <button class="product-tab" type="button" role="tab" aria-selected="false" data-product-tab="legging-flare">
+            Legging Flare
+          </button>
+          <button class="product-tab" type="button" role="tab" aria-selected="false" data-product-tab="macaquinho">
+            Macaquinho
+          </button>
+          <button class="product-tab" type="button" role="tab" aria-selected="false" data-product-tab="macaquinho-bolso">
+            Macaquinho com bolso
+          </button>
+          <button class="product-tab" type="button" role="tab" aria-selected="false" data-product-tab="bermuda-bolso">
+            Bermuda com bolso
+          </button>
+        </div>
+        <div class="product-grid active" data-product-panel="shorts-basico">
+          <article class="product-card">
+            <div class="product-media">
+              <span class="badge">Novo</span>
+              <img src="assets/duo-aura-product.jpeg" alt="Conjunto Duo Aura com top e short saia" />
+            </div>
+            <div class="product-copy">
+              <p class="product-type">Conjunto de shorts básico</p>
+              <h3>Duo Aura</h3>
+              <p>Conjunto com alta sustentação, costas nuas e zero transparência para treinar com segurança.</p>
+              <div class="buy-row">
+                <span>R$ 149,90</span>
+                <button
+                  class="cart-button"
+                  type="button"
+                  data-checkout
+                  data-title="Duo Aura"
+                  data-price="149.90"
+                >
+                  Adicionar ao carrinho
+                </button>
+              </div>
+            </div>
+          </article>
+          <article class="product-card">
+            <div class="product-media">
+              <img src="assets/product-shorts.png" alt="Short fitness DUO ACTIVE" />
+            </div>
+            <div class="product-copy">
+              <p class="product-type">Conjunto de shorts básico</p>
+              <h3>Duo Move</h3>
+              <p>Short leve com bolso lateral, ideal para corrida, bike e treino funcional.</p>
+              <div class="buy-row">
+                <span>R$ 99,90</span>
+                <button
+                  class="cart-button"
+                  type="button"
+                  data-checkout
+                  data-title="Duo Move"
+                  data-price="99.90"
+                >
+                  Adicionar ao carrinho
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div class="product-grid active" data-product-panel="legging-basica">
+          <article class="product-card">
+            <div class="product-media">
+              <span class="badge">Lançamento</span>
+              <img src="assets/product-set.png" alt="Conjunto top e legging DUO ACTIVE" />
+            </div>
+            <div class="product-copy">
+              <p class="product-type">Conjunto de legging básica</p>
+              <h3>Duo Flow</h3>
+              <p>Top de sustentação média e legging cintura alta com compressão confortável.</p>
+              <div class="buy-row">
+                <span>R$ 189,90</span>
+                <button
+                  class="cart-button"
+                  type="button"
+                  data-checkout
+                  data-title="Duo Flow"
+                  data-price="189.90"
+                >
+                  Adicionar ao carrinho
+                </button>
+              </div>
+            </div>
+          </article>
+          <article class="product-card">
+            <div class="product-media">
+              <img src="assets/product-jacket.png" alt="Conjunto legging preto DUO ACTIVE" />
+            </div>
+            <div class="product-copy">
+              <p class="product-type">Conjunto de legging básica</p>
+              <h3>Duo Essential</h3>
+              <p>Conjunto de legging com toque macio, cintura alta e caimento firme para o dia inteiro.</p>
+              <div class="buy-row">
+                <span>R$ 179,90</span>
+                <button
+                  class="cart-button"
+                  type="button"
+                  data-checkout
+                  data-title="Duo Essential"
+                  data-price="179.90"
+                >
+                  Adicionar ao carrinho
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div class="product-grid" data-product-panel="legging-bolso" hidden>
+          <article class="product-card product-empty">
+            <div class="product-copy">
+              <p class="product-type">Conjunto de legging com bolso</p>
+              <h3>Em breve</h3>
+              <p>Novos modelos serão adicionados aqui quando a coleção estiver pronta.</p>
+            </div>
+          </article>
+        </div>
+        <div class="product-grid" data-product-panel="legging-flare" hidden>
+          <article class="product-card">
+            <div class="product-copy">
+              <p class="product-type">Legging Flare</p>
+              <h3>Em breve</h3>
+              <p>Novos modelos serão adicionados aqui quando a coleção estiver pronta.</p>
+            </div>
+          </article>
+        </div>
+        <div class="product-grid" data-product-panel="macaquinho" hidden>
+          <article class="product-card">
+            <div class="product-copy">
+              <p class="product-type">Macaquinho</p>
+              <h3>Em breve</h3>
+              <p>Novos modelos serão adicionados aqui quando a coleção estiver pronta.</p>
+            </div>
+          </article>
+        </div>
+        <div class="product-grid" data-product-panel="macaquinho-bolso" hidden>
+          <article class="product-card">
+            <div class="product-copy">
+              <p class="product-type">Macaquinho com bolso</p>
+              <h3>Em breve</h3>
+              <p>Novos modelos serão adicionados aqui quando a coleção estiver pronta.</p>
+            </div>
+          </article>
+        </div>
+        <div class="product-grid" data-product-panel="bermuda-bolso" hidden>
+          <article class="product-card">
+            <div class="product-media">
+              <span class="badge">Mais vendido</span>
+              <img src="assets/product-set.png" alt="Conjunto de bermuda DUO ACTIVE" />
+            </div>
+            <div class="product-copy">
+              <p class="product-type">Bermuda com bolso</p>
+              <h3>Duo Comfort</h3>
+              <p>Conjunto com bermuda de compressão confortável para treinos leves e rotina ativa.</p>
+              <div class="buy-row">
+                <span>R$ 149,90</span>
+                <button
+                  class="cart-button"
+                  type="button"
+                  data-checkout
+                  data-title="Duo Comfort"
+                  data-price="149.90"
+                >
+                  Adicionar ao carrinho
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section editorial" aria-label="Campanha DUO ACTIVE">
+        <img src="assets/campaign-detail.png" alt="Campanha DUO ACTIVE com detalhe de movimento" />
+        <div class="editorial-copy">
+          <p class="kicker">DUO ACTIVE</p>
+          <h2>O autocuidado também começa pelo que você veste.</h2>
+          <p>
+            Conforto, qualidade e confiança para acompanhar a mulher que você escolhe ser todos os
+            dias.
+          </p>
+        </div>
+      </section>
+
+      <section class="section benefits" id="beneficios" aria-labelledby="benefits-title">
+        <div class="section-heading compact">
+          <p class="kicker">Sobre a Duo</p>
+          <h2 id="benefits-title">Conforto, estilo e energia.</h2>
+        </div>
+        <div class="benefit-grid">
+          <article>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 12h16M12 4v16" />
+            </svg>
+            <h3>Elasticidade</h3>
+            <p>Liberdade para agachar, correr e alongar sem perder o caimento.</p>
+          </article>
+          <article>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M5 19c4-10 10-14 14-14M6 13h8M10 17h7" />
+            </svg>
+            <h3>Respirabilidade</h3>
+            <p>Tecidos leves ajudam a manter o conforto nos treinos mais intensos.</p>
+          </article>
+          <article>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" />
+            </svg>
+            <h3>Acabamento</h3>
+            <p>Costuras limpas, linhas discretas e toque premium para uso frequente.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section size-guide" id="tamanhos" aria-labelledby="size-title">
+        <div>
+          <p class="kicker">Escolha sem dúvida</p>
+          <h2 id="size-title">Guia rápido de medidas</h2>
+          <div class="size-options" aria-label="Numerações disponíveis">
+            <span>36/38</span>
+            <span>40/42</span>
+            <span>44/46</span>
+          </div>
+          <div class="size-howto">
+            <h3>Como escolher seu tamanho</h3>
+            <ul>
+              <li>36/38 → Único</li>
+              <li>40/42 → G</li>
+              <li>44/46 → GG</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Numeração</th>
+                  <th>Busto</th>
+                  <th>Cintura</th>
+                  <th>Quadril</th>
+                  <th>Tamanho da peça</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>36</td>
+                  <td>82–86 cm</td>
+                  <td>62–66 cm</td>
+                  <td>88–92 cm</td>
+                  <td>Único</td>
+                </tr>
+                <tr>
+                  <td>38</td>
+                  <td>86–90 cm</td>
+                  <td>66–70 cm</td>
+                  <td>92–96 cm</td>
+                  <td>Único</td>
+                </tr>
+                <tr>
+                  <td>40</td>
+                  <td>90–94 cm</td>
+                  <td>70–74 cm</td>
+                  <td>96–100 cm</td>
+                  <td>G</td>
+                </tr>
+                <tr>
+                  <td>42</td>
+                  <td>94–98 cm</td>
+                  <td>74–78 cm</td>
+                  <td>100–104 cm</td>
+                  <td>G</td>
+                </tr>
+                <tr>
+                  <td>44</td>
+                  <td>98–102 cm</td>
+                  <td>78–82 cm</td>
+                  <td>104–108 cm</td>
+                  <td>GG</td>
+                </tr>
+                <tr>
+                  <td>46</td>
+                  <td>102–106 cm</td>
+                  <td>82–86 cm</td>
+                  <td>108–112 cm</td>
+                  <td>GG</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="size-note">
+            Nossos tecidos possuem alta elasticidade e se adaptam ao corpo. Se você estiver entre
+            dois tamanhos, escolha o menor para maior compressão ou o maior para um ajuste mais
+            confortável.
+          </p>
+        </div>
+      </section>
+
+      <section class="section checkout" id="checkout" aria-labelledby="checkout-title">
+        <div>
+          <p class="kicker">Pagamento seguro</p>
+          <h2 id="checkout-title">Checkout Mercado Pago</h2>
+          <p>
+            O botão de compra cria uma preferência de pagamento no Mercado Pago com Pix, cartão e
+            boleto, conforme os meios ativos na sua conta.
+          </p>
+        </div>
+        <div class="payment-grid" aria-label="Meios de pagamento">
+          <span>Pix</span>
+          <span>Cartão</span>
+          <span>Boleto</span>
+        </div>
+        <p class="mp-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="section contact" id="contato" aria-labelledby="contact-title">
+        <div>
+          <p class="kicker">Atendimento direto</p>
+          <h2 id="contact-title">Monte seu look DUO ACTIVE pelo WhatsApp</h2>
+          <p>
+            Envie seu tamanho, cor preferida e tipo de treino. A gente ajuda a escolher a combinação
+            ideal.
+          </p>
+        </div>
+        <div class="contact-actions">
+          <a class="button primary" href="https://wa.me/5500000000000">Chamar no WhatsApp</a>
+          <a class="button outline" href="https://instagram.com/">Instagram</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <img src="assets/duo-active-logo-transparent.png" alt="DUO ACTIVE Moda Fitness" />
+      <p>Vista a energia que te move.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

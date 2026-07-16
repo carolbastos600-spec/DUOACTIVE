@@ -1,0 +1,23 @@
+{
+  "name": "duo-active-site",
+  "version": "1.0.0",
+  "description": "Site da DUO ACTIVE com vitrine de produtos e checkout Mercado Pago.",
+  "type": "module",
+  "main": "outputs/server.mjs",
+  "scripts": {
+    "start": "node outputs/server.mjs",
+    "dev": "node outputs/server.mjs",
+    "check": "node --check outputs/server.mjs && node --check outputs/script.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "duo-active",
+    "moda-fitness",
+    "mercado-pago",
+    "render"
+  ],
+  "license": "UNLICENSED",
+  "private": true
+}

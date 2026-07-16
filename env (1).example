@@ -1,0 +1,14 @@
+# Servidor
+PORT=4174
+HOST=0.0.0.0
+
+# URL pública do site.
+PUBLIC_BASE_URL=http://127.0.0.1:4174
+
+# Mercado Pago
+MERCADO_PAGO_ACCESS_TOKEN=APP_USR_SEU_ACCESS_TOKEN_AQUI
+
+# URLs de retorno do checkout.
+CHECKOUT_SUCCESS_URL=http://127.0.0.1:4174/#checkout
+CHECKOUT_PENDING_URL=http://127.0.0.1:4174/#checkout
+CHECKOUT_FAILURE_URL=http://127.0.0.1:4174/#checkout
