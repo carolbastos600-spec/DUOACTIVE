@@ -50,10 +50,32 @@ const readJsonBody = async (request) => {
   return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
 };
 
+const PIX_DISCOUNT_RATE = 0.05;
+
+const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
+const getPaymentMethod = (payload) =>
+  payload.payment_method === "credit_card" ? "credit_card" : "pix";
+
+const getPaymentMethodRules = (paymentMethod) => {
+  if (paymentMethod === "credit_card") {
+    return {
+      installments: 6,
+      excluded_payment_types: [{ id: "bank_transfer" }, { id: "ticket" }],
+    };
+  }
+
+  return {
+    installments: 1,
+    excluded_payment_types: [{ id: "credit_card" }, { id: "debit_card" }, { id: "ticket" }],
+  };
+};
+
 const normalizePreferenceItems = (payload) => {
   const rawItems = Array.isArray(payload.items) ? payload.items : [payload];
+  const paymentMethod = getPaymentMethod(payload);
 
-  return rawItems.map((item) => {
+  const items = rawItems.map((item) => {
     const title = String(item.title || "").trim();
     const size = String(item.size || "").trim();
     const quantity = Number.parseInt(item.quantity, 10);
@@ -67,14 +89,30 @@ const normalizePreferenceItems = (payload) => {
       throw new Error("Produto com preco invalido no carrinho.");
     }
 
+    const pixDiscount = paymentMethod === "pix" ? roundMoney(unitPrice * PIX_DISCOUNT_RATE) : 0;
+    const finalUnitPrice = roundMoney(unitPrice - pixDiscount);
+
     return {
       title: `${title} - Tamanho ${size}`,
       description: `Tamanho ${size}`,
       quantity,
-      unit_price: Number(unitPrice.toFixed(2)),
+      unit_price: finalUnitPrice,
       currency_id: "BRL",
     };
   });
+
+  const shipping = roundMoney(payload.shipping || 0);
+
+  if (shipping > 0) {
+    items.push({
+      title: "Frete",
+      quantity: 1,
+      unit_price: shipping,
+      currency_id: "BRL",
+    });
+  }
+
+  return items;
 };
 
 const createPreference = async (request, response) => {
@@ -87,6 +125,7 @@ const createPreference = async (request, response) => {
 
   try {
     const payload = await readJsonBody(request);
+    const paymentMethod = getPaymentMethod(payload);
     const items = normalizePreferenceItems(payload);
 
     if (!items.length) {
@@ -102,8 +141,10 @@ const createPreference = async (request, response) => {
       },
       body: JSON.stringify({
         items,
-        payment_methods: {
-          installments: 6,
+        payment_methods: getPaymentMethodRules(paymentMethod),
+        metadata: {
+          payment_method_selected: paymentMethod,
+          coupon_code: String(payload.coupon_code || "").trim(),
         },
         back_urls: {
           success: process.env.CHECKOUT_SUCCESS_URL || `${publicBaseUrl}/#checkout`,

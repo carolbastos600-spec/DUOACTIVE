@@ -15,11 +15,23 @@ const cartItems = document.querySelector("[data-cart-items]");
 const cartEmpty = document.querySelector("[data-cart-empty]");
 const cartCount = document.querySelector("[data-cart-count]");
 const cartSubtotal = document.querySelector("[data-cart-subtotal]");
+const cartShipping = document.querySelector("[data-cart-shipping]");
+const cartPixDiscount = document.querySelector("[data-cart-pix-discount]");
+const cartCoupon = document.querySelector("[data-cart-coupon]");
 const cartTotal = document.querySelector("[data-cart-total]");
 const cartStatus = document.querySelector("[data-cart-status]");
 const cartCheckout = document.querySelector("[data-cart-checkout]");
+const paymentMethods = document.querySelectorAll("[data-payment-method]");
+const paymentNote = document.querySelector("[data-payment-note]");
+const zipInput = document.querySelector("[data-zip-input]");
+const shippingButton = document.querySelector("[data-shipping-button]");
+const shippingMessage = document.querySelector("[data-shipping-message]");
+const couponInput = document.querySelector("[data-coupon-input]");
+const couponButton = document.querySelector("[data-coupon-button]");
+const couponMessage = document.querySelector("[data-coupon-message]");
 
 const CART_STORAGE_KEY = "duo-active-cart";
+const PIX_DISCOUNT_RATE = 0.05;
 const sizeOptions = [
   { value: "Unico", label: "Unico - veste 36 ao 40" },
   { value: "G", label: "G - veste 42 ao 44" },
@@ -27,6 +39,9 @@ const sizeOptions = [
 ];
 
 let cart = [];
+let selectedPaymentMethod = "pix";
+let shippingAmount = 0;
+let couponDiscount = 0;
 
 const syncHeader = () => {
   header.classList.toggle("scrolled", window.scrollY > 18);
@@ -112,10 +127,27 @@ const escapeHtml = (value) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
-const getCartTotal = () =>
+const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
+const getCartSubtotal = () =>
   cart.reduce((total, item) => total + Number(item.unit_price) * Number(item.quantity), 0);
 
 const getCartQuantity = () => cart.reduce((total, item) => total + Number(item.quantity), 0);
+
+const getOrderSummary = () => {
+  const subtotal = roundMoney(getCartSubtotal());
+  const pixDiscount = selectedPaymentMethod === "pix" ? roundMoney(subtotal * PIX_DISCOUNT_RATE) : 0;
+  const coupon = Math.min(roundMoney(couponDiscount), subtotal - pixDiscount);
+  const total = roundMoney(Math.max(0, subtotal + shippingAmount - pixDiscount - coupon));
+
+  return {
+    subtotal,
+    shipping: shippingAmount,
+    pixDiscount,
+    coupon,
+    total,
+  };
+};
 
 const saveCart = () => {
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
@@ -148,6 +180,14 @@ const showPaymentStatus = (message = "") => {
   if (paymentStatus) paymentStatus.textContent = message;
 };
 
+const updatePaymentNote = () => {
+  if (selectedPaymentMethod === "pix") {
+    paymentNote.textContent = "Voce economiza 5% pagando via PIX.";
+  } else {
+    paymentNote.textContent = "Parcele em ate 6x.";
+  }
+};
+
 const openCart = () => {
   cartDrawer.classList.add("open");
   cartDrawer.setAttribute("aria-hidden", "false");
@@ -163,14 +203,18 @@ const closeCart = () => {
 };
 
 const renderCart = () => {
-  const total = getCartTotal();
+  const summary = getOrderSummary();
   const quantity = getCartQuantity();
 
   cartCount.textContent = String(quantity);
-  cartSubtotal.textContent = formatMoney(total);
-  cartTotal.textContent = formatMoney(total);
+  cartSubtotal.textContent = formatMoney(summary.subtotal);
+  cartShipping.textContent = formatMoney(summary.shipping);
+  cartPixDiscount.textContent = `-${formatMoney(summary.pixDiscount)}`;
+  cartCoupon.textContent = `-${formatMoney(summary.coupon)}`;
+  cartTotal.textContent = formatMoney(summary.total);
   cartEmpty.hidden = cart.length > 0;
   cartCheckout.disabled = cart.length === 0;
+  updatePaymentNote();
 
   cartItems.innerHTML = cart
     .map(
@@ -179,7 +223,7 @@ const renderCart = () => {
           <div class="cart-line-top">
             <div>
               <h3>${escapeHtml(item.title)}</h3>
-              <p>Tamanho ${escapeHtml(item.size)}</p>
+              <p>Tamanho ${escapeHtml(item.size)} | Quantidade ${item.quantity}</p>
             </div>
             <strong class="cart-line-price">${formatMoney(item.unit_price * item.quantity)}</strong>
           </div>
@@ -286,14 +330,38 @@ const addToCart = (button) => {
   openCart();
 };
 
+const calculateShipping = () => {
+  const zip = zipInput.value.replace(/\D/g, "");
+
+  if (zip && zip.length !== 8) {
+    shippingMessage.textContent = "Confira o CEP digitado.";
+    zipInput.focus();
+    return;
+  }
+
+  shippingAmount = 0;
+  shippingMessage.textContent = "Frete calculado na proxima atualizacao.";
+  renderCart();
+};
+
+const applyCoupon = () => {
+  const couponCode = couponInput.value.trim();
+  couponDiscount = 0;
+  couponMessage.textContent = couponCode
+    ? "Cupom ainda nao disponivel para esta compra."
+    : "Digite um cupom para aplicar quando a promocao estiver ativa.";
+  renderCart();
+};
+
 const startCheckout = async () => {
   if (!cart.length) {
     showCartStatus("Adicione pelo menos um produto ao carrinho.");
     return;
   }
 
+  const summary = getOrderSummary();
   cartCheckout.disabled = true;
-  cartCheckout.textContent = "Abrindo checkout...";
+  cartCheckout.textContent = "Abrindo pagamento...";
   showCartStatus("");
   showPaymentStatus("");
 
@@ -304,12 +372,21 @@ const startCheckout = async () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        payment_method: selectedPaymentMethod,
+        shipping: summary.shipping,
+        coupon_code: couponInput.value.trim(),
         items: cart.map((item) => ({
           title: item.title,
           size: item.size,
           quantity: item.quantity,
           unit_price: item.unit_price,
         })),
+        summary: {
+          subtotal: summary.subtotal,
+          pix_discount: summary.pixDiscount,
+          coupon_discount: summary.coupon,
+          total: summary.total,
+        },
       }),
     });
 
@@ -328,7 +405,7 @@ const startCheckout = async () => {
     showCartStatus(message);
     showPaymentStatus(message);
     cartCheckout.disabled = false;
-    cartCheckout.textContent = "Finalizar compra";
+    cartCheckout.textContent = "Continuar para pagamento";
   }
 };
 
@@ -349,10 +426,19 @@ cartItems.addEventListener("click", (event) => {
   if (removeId) removeCartItem(removeId);
 });
 
+paymentMethods.forEach((input) => {
+  input.addEventListener("change", () => {
+    selectedPaymentMethod = input.value;
+    renderCart();
+  });
+});
+
 cartToggle.addEventListener("click", openCart);
 cartClose.addEventListener("click", closeCart);
 cartBackdrop.addEventListener("click", closeCart);
 cartCheckout.addEventListener("click", startCheckout);
+shippingButton.addEventListener("click", calculateShipping);
+couponButton.addEventListener("click", applyCoupon);
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeCart();
 });

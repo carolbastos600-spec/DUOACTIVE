@@ -486,18 +486,66 @@
       </div>
       <div class="cart-items" data-cart-items></div>
       <p class="cart-empty" data-cart-empty>Seu carrinho esta vazio.</p>
+      <section class="checkout-panel" aria-label="Forma de pagamento">
+        <h3>Forma de pagamento</h3>
+        <div class="payment-options">
+          <label>
+            <input type="radio" name="paymentMethod" value="pix" data-payment-method checked />
+            <span>PIX</span>
+          </label>
+          <label>
+            <input type="radio" name="paymentMethod" value="credit_card" data-payment-method />
+            <span>Cartao de Credito</span>
+          </label>
+        </div>
+        <p class="payment-note" data-payment-note>Voce economiza 5% pagando via PIX.</p>
+      </section>
+      <section class="checkout-panel" aria-label="Frete">
+        <h3>Frete</h3>
+        <div class="field-row">
+          <label>
+            CEP
+            <input type="text" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" data-zip-input />
+          </label>
+          <button type="button" data-shipping-button>Calcular Frete</button>
+        </div>
+        <p class="checkout-hint" data-shipping-message>Frete calculado na proxima atualizacao.</p>
+      </section>
+      <section class="checkout-panel" aria-label="Cupom de desconto">
+        <h3>Cupom</h3>
+        <div class="field-row">
+          <label>
+            Cupom de desconto
+            <input type="text" autocomplete="off" placeholder="Digite seu cupom" data-coupon-input />
+          </label>
+          <button type="button" data-coupon-button>Aplicar</button>
+        </div>
+        <p class="checkout-hint" data-coupon-message>Cupons serao liberados em breve.</p>
+      </section>
       <div class="cart-summary" aria-label="Resumo do carrinho">
         <div>
           <span>Subtotal</span>
           <strong data-cart-subtotal>R$ 0,00</strong>
         </div>
         <div>
-          <span>Total</span>
+          <span>Frete</span>
+          <strong data-cart-shipping>R$ 0,00</strong>
+        </div>
+        <div>
+          <span>Desconto PIX</span>
+          <strong data-cart-pix-discount>-R$ 0,00</strong>
+        </div>
+        <div>
+          <span>Cupom</span>
+          <strong data-cart-coupon>R$ 0,00</strong>
+        </div>
+        <div class="cart-summary-total">
+          <span>Total Final</span>
           <strong data-cart-total>R$ 0,00</strong>
         </div>
       </div>
       <p class="cart-status" data-cart-status role="status" aria-live="polite"></p>
-      <button class="cart-checkout" type="button" data-cart-checkout>Finalizar compra</button>
+      <button class="cart-checkout" type="button" data-cart-checkout>Continuar para pagamento</button>
     </aside>
 
     <script src="script.js"></script>
