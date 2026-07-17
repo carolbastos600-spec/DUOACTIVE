@@ -50,20 +50,47 @@ const readJsonBody = async (request) => {
   return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
 };
 
+const normalizePreferenceItems = (payload) => {
+  const rawItems = Array.isArray(payload.items) ? payload.items : [payload];
+
+  return rawItems.map((item) => {
+    const title = String(item.title || "").trim();
+    const size = String(item.size || "").trim();
+    const quantity = Number.parseInt(item.quantity, 10);
+    const unitPrice = Number(item.unit_price);
+
+    if (!title || !size || !Number.isInteger(quantity) || quantity < 1) {
+      throw new Error("Revise os produtos, tamanhos e quantidades do carrinho.");
+    }
+
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+      throw new Error("Produto com preco invalido no carrinho.");
+    }
+
+    return {
+      title: `${title} - Tamanho ${size}`,
+      description: `Tamanho ${size}`,
+      quantity,
+      unit_price: Number(unitPrice.toFixed(2)),
+      currency_id: "BRL",
+    };
+  });
+};
+
 const createPreference = async (request, response) => {
   if (!process.env.MERCADO_PAGO_ACCESS_TOKEN) {
     sendJson(response, 500, {
-      error: "Configure MERCADO_PAGO_ACCESS_TOKEN para ativar o checkout.",
+      error: "Configure MERCADO_PAGO_ACCESS_TOKEN no Render para ativar o checkout.",
     });
     return;
   }
 
   try {
-    const item = await readJsonBody(request);
-    const unitPrice = Number(item.unit_price);
+    const payload = await readJsonBody(request);
+    const items = normalizePreferenceItems(payload);
 
-    if (!item.title || !Number.isFinite(unitPrice) || unitPrice <= 0) {
-      sendJson(response, 400, { error: "Produto inválido para checkout." });
+    if (!items.length) {
+      sendJson(response, 400, { error: "Adicione produtos ao carrinho antes de finalizar." });
       return;
     }
 
@@ -74,14 +101,7 @@ const createPreference = async (request, response) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        items: [
-          {
-            title: item.title,
-            quantity: Number(item.quantity || 1),
-            unit_price: unitPrice,
-            currency_id: "BRL",
-          },
-        ],
+        items,
         payment_methods: {
           installments: 6,
         },
@@ -108,8 +128,10 @@ const createPreference = async (request, response) => {
       init_point: preference.init_point,
       sandbox_init_point: preference.sandbox_init_point,
     });
-  } catch {
-    sendJson(response, 500, { error: "Erro inesperado ao iniciar checkout." });
+  } catch (error) {
+    sendJson(response, 400, {
+      error: error instanceof Error ? error.message : "Erro inesperado ao iniciar checkout.",
+    });
   }
 };
 
@@ -132,7 +154,7 @@ const serveStatic = async (request, response) => {
     response.end(file);
   } catch {
     response.writeHead(404);
-    response.end("Arquivo não encontrado");
+    response.end("Arquivo nao encontrado");
   }
 };
 
@@ -153,7 +175,7 @@ createServer(async (request, response) => {
   }
 
   response.writeHead(405);
-  response.end("Método não permitido");
+  response.end("Metodo nao permitido");
 }).listen(port, host, () => {
-  console.log(`DUO ACTIVE disponível em http://${host}:${port}/`);
+  console.log(`DUO ACTIVE disponivel em http://${host}:${port}/`);
 });
