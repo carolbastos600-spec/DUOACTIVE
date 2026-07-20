@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --paper: #f7f1e6;
   --paper-soft: #fbf7ef;
   --sand: #dfd4c4;
@@ -1028,6 +1028,36 @@ body.cart-open {
   line-height: 1.45;
 }
 
+
+.customer-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.customer-fields label {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.customer-fields input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 13px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font: inherit;
+}
+
+.customer-fields input:focus {
+  border-color: var(--brown-dark);
+  outline: 2px solid rgba(45, 30, 16, 0.12);
+}
 .payment-note {
   color: var(--brown-dark);
   font-weight: 800;
@@ -1307,3 +1337,4 @@ body.cart-open {
     min-height: 220px;
   }
 }
+

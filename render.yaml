@@ -1,4 +1,4 @@
-services:
+﻿services:
   - type: web
     name: duo-active-site
     runtime: node
@@ -19,4 +19,10 @@ services:
       - key: CHECKOUT_FAILURE_URL
         value: https://www.duoactive.com.br/#checkout
       - key: MERCADO_PAGO_ACCESS_TOKEN
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: Duo Active <pedidos@duoactive.com.br>
+      - key: MERCADO_PAGO_WEBHOOK_SECRET
         sync: false

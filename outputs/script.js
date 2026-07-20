@@ -1,4 +1,4 @@
-const header = document.querySelector(".site-header");
+﻿const header = document.querySelector(".site-header");
 const menuButton = document.querySelector(".menu-button");
 const navLinks = document.querySelectorAll(".nav a");
 const checkoutButtons = document.querySelectorAll("[data-checkout]");
@@ -29,6 +29,8 @@ const shippingMessage = document.querySelector("[data-shipping-message]");
 const couponInput = document.querySelector("[data-coupon-input]");
 const couponButton = document.querySelector("[data-coupon-button]");
 const couponMessage = document.querySelector("[data-coupon-message]");
+const customerNameInput = document.querySelector("[data-customer-name]");
+const customerEmailInput = document.querySelector("[data-customer-email]");
 
 const CART_STORAGE_KEY = "duo-active-cart";
 const PIX_DISCOUNT_RATE = 0.05;
@@ -359,6 +361,21 @@ const startCheckout = async () => {
     return;
   }
 
+  const customerName = customerNameInput.value.trim();
+  const customerEmail = customerEmailInput.value.trim();
+
+  if (!customerName) {
+    showCartStatus("Informe seu nome para continuar.");
+    customerNameInput.focus();
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+    showCartStatus("Informe um e-mail valido para receber os dados do pedido.");
+    customerEmailInput.focus();
+    return;
+  }
+
   const summary = getOrderSummary();
   cartCheckout.disabled = true;
   cartCheckout.textContent = "Abrindo pagamento...";
@@ -372,6 +389,10 @@ const startCheckout = async () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        customer: {
+          name: customerName,
+          email: customerEmail,
+        },
         payment_method: selectedPaymentMethod,
         shipping: summary.shipping,
         coupon_code: couponInput.value.trim(),
@@ -401,14 +422,13 @@ const startCheckout = async () => {
     const message =
       error instanceof Error
         ? error.message
-        : "Checkout indisponivel no momento. Tente novamente ou chame no WhatsApp.";
+        : "Checkout indisponivel no momento. Tente novamente em alguns instantes.";
     showCartStatus(message);
     showPaymentStatus(message);
     cartCheckout.disabled = false;
     cartCheckout.textContent = "Continuar para pagamento";
   }
 };
-
 checkoutButtons.forEach((button) => {
   button.addEventListener("click", () => addToCart(button));
 });
@@ -446,3 +466,5 @@ document.addEventListener("keydown", (event) => {
 ensureProductSizeFields();
 loadCart();
 renderCart();
+
+

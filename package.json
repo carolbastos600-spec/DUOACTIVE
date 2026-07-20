@@ -19,5 +19,8 @@
     "render"
   ],
   "license": "UNLICENSED",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "resend": "^6.17.2"
+  }
 }
