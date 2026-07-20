@@ -188,5 +188,10 @@ https://www.duoactive.com.br/api/webhooks/mercadopago
 
 O webhook valida `x-signature`, `x-request-id` e `data.id` usando `MERCADO_PAGO_WEBHOOK_SECRET`. Depois consulta o pagamento em `https://api.mercadopago.com/v1/payments/{id}` antes de enviar o e-mail de pagamento aprovado.
 
-A rota evita duplicidade por numero de pedido enquanto a instancia do servidor estiver ativa.
+A rota usa idempotencia baseada no ID do pagamento do Mercado Pago (`payment-approved/{payment_id}`) ao enviar pelo Resend. Essa chave impede duplicidade mesmo se o webhook for reenviado apos reinicio ou novo deploy, dentro da janela de idempotencia mantida pelo Resend. O servidor tambem grava um arquivo `.email-idempotency.json` como apoio local quando o ambiente permite escrita.
+
+
+### E-mail obrigatorio no checkout
+
+Antes do redirecionamento ao Mercado Pago, o carrinho exige nome e e-mail da cliente. Esses dados sao enviados ao backend em POST /api/create-preference, associados ao numero do pedido e gravados nos metadados da preferencia do Mercado Pago.
 

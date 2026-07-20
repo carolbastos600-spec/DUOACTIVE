@@ -1,6 +1,6 @@
 ﻿import { createServer } from "node:http";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Resend } from "resend";
@@ -35,7 +35,8 @@ const emailFrom = process.env.EMAIL_FROM || "Duo Active <pedidos@duoactive.com.b
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const ordersByNumber = new Map();
-const sentEmailKeys = new Set();
+const emailIdempotencyPath = join(root, ".email-idempotency.json");
+let sentEmailKeys = new Set();
 
 const mimeTypes = {
   ".css": "text/css; charset=utf-8",
@@ -55,6 +56,26 @@ const readJsonBody = async (request) => {
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
   return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+};
+const loadEmailIdempotency = async () => {
+  try {
+    const data = JSON.parse(await readFile(emailIdempotencyPath, "utf8"));
+    sentEmailKeys = new Set(Array.isArray(data.sent) ? data.sent : []);
+  } catch {
+    sentEmailKeys = new Set();
+  }
+};
+
+const rememberEmailKey = async (key) => {
+  sentEmailKeys.add(key);
+  try {
+    await writeFile(
+      emailIdempotencyPath,
+      JSON.stringify({ sent: [...sentEmailKeys], updated_at: new Date().toISOString() }, null, 2)
+    );
+  } catch (error) {
+    console.warn("Nao foi possivel persistir idempotencia local de e-mail.", error);
+  }
 };
 
 const PIX_DISCOUNT_RATE = 0.05;
@@ -246,20 +267,23 @@ const orderSummaryHtml = (order) => `
 
 const sendEmailOnce = async ({ key, to, subject, html }) => {
   if (!to) return { skipped: "missing-recipient" };
-  if (sentEmailKeys.has(key)) return { skipped: "duplicate" };
+  if (sentEmailKeys.has(key)) return { skipped: "duplicate-local" };
   if (!resend) {
     console.warn(`Resend nao configurado. E-mail nao enviado: ${subject}`);
     return { skipped: "missing-resend-key" };
   }
 
-  const { data, error } = await resend.emails.send({ from: emailFrom, to: [to], subject, html });
+  const { data, error } = await resend.emails.send(
+    { from: emailFrom, to: [to], subject, html },
+    { idempotencyKey: key }
+  );
 
   if (error) {
     console.error("Erro ao enviar e-mail Resend", error);
     return { error };
   }
 
-  sentEmailKeys.add(key);
+  await rememberEmailKey(key);
   return { data };
 };
 
@@ -279,9 +303,9 @@ const sendOrderReceivedEmail = (order) =>
     }),
   });
 
-const sendPaymentApprovedEmail = (order) =>
+const sendPaymentApprovedEmail = (order, paymentId) =>
   sendEmailOnce({
-    key: `payment-approved:${order.orderNumber}`,
+    key: `payment-approved/${paymentId}`,
     to: order.customer.email,
     subject: `Pagamento aprovado ${order.orderNumber} | DUO ACTIVE`,
     html: layoutEmail({
@@ -485,7 +509,7 @@ const handleMercadoPagoWebhook = async (request, response) => {
 
     const orderNumber = payment.external_reference || payment.metadata?.order_number || `MP-${payment.id}`;
     const order = ordersByNumber.get(orderNumber) || orderFromPaymentFallback(payment);
-    await sendPaymentApprovedEmail(order);
+    await sendPaymentApprovedEmail(order, payment.id);
     ordersByNumber.set(orderNumber, { ...order, paymentId: payment.id, paymentStatus: payment.status });
 
     sendJson(response, 200, { received: true, status: payment.status, order_number: orderNumber });
@@ -526,6 +550,8 @@ const handleOrderShippedEmail = async (request, response) => {
     sendJson(response, 400, { error: error instanceof Error ? error.message : "Erro ao enviar e-mail." });
   }
 };
+
+await loadEmailIdempotency();
 
 const serveStatic = async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
@@ -581,3 +607,5 @@ createServer(async (request, response) => {
 }).listen(port, host, () => {
   console.log(`DUO ACTIVE disponivel em http://${host}:${port}/`);
 });
+
+
