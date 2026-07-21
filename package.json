@@ -1,26 +1,36 @@
-{
-  "name": "duo-active-site",
-  "version": "1.0.0",
-  "description": "Site da DUO ACTIVE com vitrine de produtos e checkout Mercado Pago.",
-  "type": "module",
-  "main": "outputs/server.mjs",
-  "scripts": {
-    "start": "node outputs/server.mjs",
-    "dev": "node outputs/server.mjs",
-    "check": "node --check outputs/server.mjs && node --check outputs/script.js"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "keywords": [
-    "duo-active",
-    "moda-fitness",
-    "mercado-pago",
-    "render"
-  ],
-  "license": "UNLICENSED",
-  "private": true,
-  "dependencies": {
-    "resend": "^6.17.2"
-  }
-}
+﻿# Servidor
+PORT=4174
+HOST=0.0.0.0
+
+# URL pública do site.
+# Local:
+PUBLIC_BASE_URL=http://127.0.0.1:4174
+# Produção, depois de apontar o domínio:
+# PUBLIC_BASE_URL=https://www.duoactive.com.br
+
+# Mercado Pago
+# Copie o Access Token de produção no painel Mercado Pago Developers.
+# Nunca coloque essa chave no HTML, CSS ou JS do navegador.
+MERCADO_PAGO_ACCESS_TOKEN=APP_USR_SEU_ACCESS_TOKEN_AQUI
+
+# URLs de retorno do checkout.
+# Em produção, use:
+# CHECKOUT_SUCCESS_URL=https://www.duoactive.com.br/#checkout
+# CHECKOUT_PENDING_URL=https://www.duoactive.com.br/#checkout
+# CHECKOUT_FAILURE_URL=https://www.duoactive.com.br/#checkout
+CHECKOUT_SUCCESS_URL=http://127.0.0.1:4174/#checkout
+CHECKOUT_PENDING_URL=http://127.0.0.1:4174/#checkout
+CHECKOUT_FAILURE_URL=http://127.0.0.1:4174/#checkout
+
+RESEND_API_KEY=
+EMAIL_FROM=Duo Active <pedidos@duoactive.com.br>
+MERCADO_PAGO_WEBHOOK_SECRET=
+
+
+# Melhor Envio
+MELHOR_ENVIO_CLIENT_ID=
+MELHOR_ENVIO_CLIENT_SECRET=
+MELHOR_ENVIO_REDIRECT_URI=https://duoactive.com.br/api/melhor-envio/callback
+MELHOR_ENVIO_FROM_POSTAL_CODE=
+MELHOR_ENVIO_TOKEN_FILE=/var/data/melhor-envio-tokens.json
+MELHOR_ENVIO_TECHNICAL_EMAIL=pedidos@duoactive.com.br

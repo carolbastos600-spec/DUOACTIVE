@@ -153,41 +153,50 @@
         </div>
       </section>
 
-      <section class="category-showcase" aria-labelledby="category-title">
-        <p class="kicker">ESSENCE</p>
-        <h2 id="category-title">Cada movimento merece uma escolha.</h2>
-        <p class="category-copy">
-          Descubra a coleção Essence, criada para acompanhar diferentes estilos de treino com conforto, sustentação e elegância. Escolha o modelo que mais combina com você.
-        </p>
-        <div class="category-grid">
-          <a class="category-card" href="#colecao" data-open-category="essence-flare">
-            <span class="category-photo-slot">Foto Essence Flare</span>
-            <span>Essence Flare</span>
-          </a>
-          <a class="category-card" href="#colecao" data-open-category="essence-sprint">
-            <span class="category-photo-slot">Foto Essence Sprint</span>
-            <span>Essence Sprint</span>
-          </a>
-          <a class="category-card" href="#colecao" data-open-category="essence-motion">
-            <span class="category-photo-slot">Foto Essence Motion</span>
-            <span>Essence Motion</span>
-          </a>
-          <a class="category-card" href="#colecao" data-open-category="essence-sculpt">
-            <span class="category-photo-slot">Foto Essence Sculpt</span>
-            <span>Essence Sculpt</span>
-          </a>
-          <a class="category-card" href="#colecao" data-open-category="essence-balance">
-            <span class="category-photo-slot">Foto Essence Balance</span>
-            <span>Essence Balance</span>
-          </a>
-          <a class="category-card" href="#colecao" data-open-category="essence-flow">
-            <img src="assets/duo-aura-product.jpeg" alt="Conjunto Essence Flow short e top frente única" />
-            <span>Essence Flow</span>
-          </a>
-          <a class="category-card" href="#colecao" data-open-category="essence-power">
-            <span class="category-photo-slot">Foto Essence Power</span>
-            <span>Essence Power</span>
-          </a>
+      <section class="brand-differentials" aria-labelledby="brand-differentials-title">
+        <div class="brand-differentials-panel">
+          <p class="brand-differentials-eyebrow">SOBRE A DUO ACTIVE</p>
+          <div class="brand-differentials-grid">
+            <article class="brand-differential-item">
+              <svg aria-hidden="true" viewBox="0 0 32 32">
+                <path d="M16 4c4.8 4.2 7.2 8.1 7.2 11.8A7.2 7.2 0 0 1 16 23a7.2 7.2 0 0 1-7.2-7.2C8.8 12.1 11.2 8.2 16 4Z" />
+                <path d="M12.2 17.2c1.8 1.8 5.8 1.8 7.6 0" />
+                <path d="M16 23v5" />
+              </svg>
+              <h2 id="brand-differentials-title">Elasticidade</h2>
+              <p>Liberdade para se movimentar sem limitações.</p>
+            </article>
+            <article class="brand-differential-item">
+              <svg aria-hidden="true" viewBox="0 0 32 32">
+                <path d="M7 17c5-7.5 13-7.5 18 0" />
+                <path d="M9.8 20.2c3.7-4.2 8.7-4.2 12.4 0" />
+                <path d="M13 23.2c1.9-1.6 4.1-1.6 6 0" />
+                <path d="M16 26h.1" />
+              </svg>
+              <h3>Respirabilidade</h3>
+              <p>Tecnologia que mantém o conforto em treinos intensos.</p>
+            </article>
+            <article class="brand-differential-item">
+              <svg aria-hidden="true" viewBox="0 0 32 32">
+                <path d="M16 4 27 10v12l-11 6-11-6V10l11-6Z" />
+                <path d="M11.2 16h9.6" />
+                <path d="M16 10.8v10.4" />
+                <path d="M12.6 12.6 19.4 19.4" />
+                <path d="m19.4 12.6-6.8 6.8" />
+              </svg>
+              <h3>Acabamento Premium</h3>
+              <p>Costuras reforçadas, toque macio e alta durabilidade.</p>
+            </article>
+            <article class="brand-differential-item">
+              <svg aria-hidden="true" viewBox="0 0 32 32">
+                <path d="M16 5c5.5 0 9.5 4 9.5 9.2 0 6.6-5.5 10.4-9.5 12.8-4-2.4-9.5-6.2-9.5-12.8C6.5 9 10.5 5 16 5Z" />
+                <path d="M11.2 15.2c2.2 2.6 7.4 2.6 9.6 0" />
+                <path d="M12.8 10.5c1.4 1 5 1 6.4 0" />
+              </svg>
+              <h3>Modelagem Inteligente</h3>
+              <p>Peças desenvolvidas para valorizar o corpo com conforto e segurança.</p>
+            </article>
+          </div>
         </div>
       </section>
 
