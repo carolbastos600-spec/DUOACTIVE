@@ -33,6 +33,11 @@ const couponButton = document.querySelector("[data-coupon-button]");
 const couponMessage = document.querySelector("[data-coupon-message]");
 const customerNameInput = document.querySelector("[data-customer-name]");
 const customerEmailInput = document.querySelector("[data-customer-email]");
+const searchOpen = document.querySelector("[data-search-open]");
+const searchPanel = document.querySelector("[data-search-panel]");
+const searchInput = document.querySelector("[data-search-input]");
+const searchClose = document.querySelector("[data-search-close]");
+const searchResults = document.querySelector("[data-search-results]");
 
 const CART_STORAGE_KEY = "duo-active-cart";
 const PIX_DISCOUNT_RATE = 0.05;
@@ -93,6 +98,102 @@ if (initialProductTab) setProductTab(initialProductTab);
 
 let activeHeroSlide = 0;
 let heroSlideTimer;
+
+
+const normalizeSearchText = (value = "") =>
+  String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+const getSearchProducts = () =>
+  Array.from(document.querySelectorAll(".product-card"))
+    .map((card, index) => {
+      const button = card.querySelector("[data-checkout]");
+      const panel = card.closest("[data-product-panel]");
+      const image = card.querySelector(".product-media img");
+      const name = button?.dataset.title || card.querySelector("h3")?.textContent || "Produto DUO ACTIVE";
+      const type = card.querySelector(".product-type")?.textContent || "";
+      const description = Array.from(card.querySelectorAll(".product-copy > p"))
+        .map((item) => item.textContent || "")
+        .join(" ");
+      const colors = Array.from(card.querySelectorAll(".color-pill"))
+        .map((item) => item.textContent.replace("?", "").trim())
+        .join(" ");
+      const id = card.id || `produto-${index + 1}`;
+      card.id = id;
+
+      return {
+        id,
+        card,
+        panelName: panel?.dataset.productPanel || "all",
+        image: image?.getAttribute("src") || "",
+        name,
+        price: button?.dataset.price ? formatMoney(Number(button.dataset.price)) : "",
+        haystack: normalizeSearchText(`${name} ${type} ${description} ${colors} ${panel?.dataset.productPanel || ""} Essence DUO ACTIVE`),
+      };
+    })
+    .filter((product) => product.name);
+
+const closeSearch = () => {
+  if (!searchPanel || !searchInput || !searchResults) return;
+  searchPanel.hidden = true;
+  header.classList.remove("search-open");
+  searchInput.value = "";
+  searchResults.innerHTML = "";
+};
+
+const openSearch = () => {
+  if (!searchPanel || !searchInput) return;
+  searchPanel.hidden = false;
+  header.classList.add("search-open");
+  window.setTimeout(() => searchInput.focus(), 0);
+};
+
+const openSearchProduct = (productId) => {
+  const products = getSearchProducts();
+  const product = products.find((item) => item.id === productId);
+  if (!product) return;
+  const tab = document.querySelector(`[data-product-tab="${product.panelName}"]`);
+  if (tab) setProductTab(tab);
+  closeSearch();
+  window.requestAnimationFrame(() => {
+    product.card.scrollIntoView({ behavior: "smooth", block: "center" });
+    product.card.classList.add("search-highlight");
+    window.setTimeout(() => product.card.classList.remove("search-highlight"), 1300);
+    history.replaceState(null, "", `#${product.id}`);
+  });
+};
+
+const renderSearchResults = () => {
+  if (!searchInput || !searchResults) return;
+  const query = normalizeSearchText(searchInput.value);
+  if (!query) {
+    searchResults.innerHTML = "";
+    return;
+  }
+  const products = getSearchProducts().filter((product) => product.haystack.includes(query));
+
+  if (!products.length) {
+    searchResults.innerHTML = '<p class="search-empty">Nenhum produto encontrado.</p>';
+    return;
+  }
+
+  searchResults.innerHTML = products
+    .map(
+      (product) => `
+        <a class="search-result" href="#${escapeHtml(product.id)}" data-search-product="${escapeHtml(product.id)}" role="option">
+          <img src="${escapeHtml(product.image)}" alt="" />
+          <span>
+            <strong>${escapeHtml(product.name)}</strong>
+            <small>${escapeHtml(product.price)}</small>
+          </span>
+        </a>
+      `
+    )
+    .join("");
+};
 
 const showHeroSlide = (index) => {
   if (!heroSlides.length) return;
@@ -580,6 +681,27 @@ paymentMethods.forEach((input) => {
   });
 });
 
+
+if (searchOpen) searchOpen.addEventListener("click", openSearch);
+if (searchClose) searchClose.addEventListener("click", closeSearch);
+if (searchInput) {
+  searchInput.addEventListener("input", renderSearchResults);
+  searchInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      const firstResult = searchResults?.querySelector("[data-search-product]");
+      if (firstResult instanceof HTMLElement) openSearchProduct(firstResult.dataset.searchProduct || "");
+    }
+  });
+}
+if (searchResults) {
+  searchResults.addEventListener("click", (event) => {
+    const result = event.target instanceof HTMLElement ? event.target.closest("[data-search-product]") : null;
+    if (!(result instanceof HTMLElement)) return;
+    event.preventDefault();
+    openSearchProduct(result.dataset.searchProduct || "");
+  });
+}
+
 cartToggle.addEventListener("click", openCart);
 cartClose.addEventListener("click", closeCart);
 cartBackdrop.addEventListener("click", closeCart);
@@ -588,7 +710,10 @@ shippingButton.addEventListener("click", calculateShipping);
 zipInput.addEventListener("input", () => resetShipping("Calcule o frete para continuar."));
 couponButton.addEventListener("click", applyCoupon);
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeCart();
+  if (event.key === "Escape") {
+    closeCart();
+    closeSearch();
+  }
 });
 
 ensureProductSizeFields();
