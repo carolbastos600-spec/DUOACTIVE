@@ -18,96 +18,138 @@
   </head>
   <body>
     <header class="site-header" aria-label="Cabeçalho">
-      <a class="brand" href="#inicio" aria-label="DUO ACTIVE">
-        <img src="assets/duo-active-logo-transparent.png" alt="DUO ACTIVE Moda Fitness" />
-      </a>
-      <nav class="nav" aria-label="Navegação principal">
-        <a href="#colecoes">Coleção</a>
-        <a href="#beneficios">Sobre</a>
-        <a href="#instagram">Instagram</a>
-      </nav>
-      <button class="cart-toggle" type="button" aria-label="Abrir carrinho" aria-haspopup="dialog">
-        <svg aria-hidden="true" viewBox="0 0 24 24">
-          <path d="M7 8V7a5 5 0 0 1 10 0v1h2.2l.8 13H4L4.8 8H7Zm2 0h6V7a3 3 0 0 0-6 0v1Z" />
-        </svg>
-        <span class="cart-count" data-cart-count>0</span>
-      </button>
-      <a class="header-action" href="#colecao">Comprar</a>
-      <button class="menu-button" type="button" aria-label="Abrir menu" aria-expanded="false">
-        <span></span>
-        <span></span>
-      </button>
+      <div class="topbar" role="note">Frete grátis para compras acima de R$299</div>
+      <div class="header-main">
+        <a class="brand" href="#inicio" aria-label="DUO ACTIVE">
+          <img src="assets/duo-active-logo-transparent.png" alt="DUO ACTIVE Moda Fitness" />
+        </a>
+        <nav class="nav" aria-label="Navegação principal">
+          <a href="#colecoes">Coleção</a>
+          <a href="#beneficios">Sobre</a>
+          <a href="#instagram">Instagram</a>
+        </nav>
+        <div class="header-icons" aria-label="Ações rápidas">
+          <button class="header-icon" type="button" aria-label="Buscar">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m16.5 16.5 4 4" />
+            </svg>
+          </button>
+          <button class="header-icon" type="button" aria-label="Perfil">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
+            </svg>
+          </button>
+          <button class="cart-toggle header-icon" type="button" aria-label="Abrir carrinho" aria-haspopup="dialog">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M7 8V7a5 5 0 0 1 10 0v1h2.2l.8 13H4L4.8 8H7Zm2 0h6V7a3 3 0 0 0-6 0v1Z" />
+            </svg>
+            <span class="cart-count" data-cart-count>0</span>
+          </button>
+          <button class="menu-button" type="button" aria-label="Abrir menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
     </header>
 
     <main id="inicio">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-overlay">
-          <p class="kicker">@duoactive__</p>
+          <p class="kicker">SOBRE A DUO ACTIVE</p>
           <h1 id="hero-title">DUO ACTIVE</h1>
-          <p class="hero-label">Moda fitness</p>
-          <h2>Seu treino também é autocuidado.</h2>
+          <p class="hero-label">MODA FITNESS</p>
+          <h2>VISTA A ENERGIA<br />QUE TE MOVE.</h2>
           <p class="hero-copy">
-            Conforto para treinar. Elegância para viver. Peças criadas para acompanhar a mulher que você está se tornando.
+            Moda fitness feminina com toque sofisticado,<br />
+            caimento perfeito e conforto que acompanha<br />
+            você em todos os dias.
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="#colecao">Ver peças</a>
+            <a class="button primary" href="#colecao">CONHECER COLEÇÃO</a>
           </div>
           <div class="hero-proof" aria-label="Diferenciais DUO ACTIVE">
-            <span>Alta sustentação</span>
-            <span>Toque premium</span>
-            <span>Troca facilitada</span>
+            <span>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M12 3v18M5 8h14M7 16h10" />
+              </svg>
+              Tecnologia
+            </span>
+            <span>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M5 12c2.2-5 11.8-5 14 0-2.2 5-11.8 5-14 0Z" />
+                <path d="M9 12c1.1 1.2 4.9 1.2 6 0" />
+              </svg>
+              Conforto
+            </span>
+            <span>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M12 21s-7-4.4-7-11a4 4 0 0 1 7-2.7A4 4 0 0 1 19 10c0 6.6-7 11-7 11Z" />
+              </svg>
+              Autocuidado
+            </span>
           </div>
         </div>
-        <div class="hero-slider" aria-label="Campanha principal">
+        <div class="hero-slider hero-photo-placeholder" aria-label="Imagem da coleção em destaque">
           <figure class="hero-slide active photo-frame photo-frame-hero">
-            <span>Foto editorial principal</span>
-          </figure>
-          <figure class="hero-slide photo-frame photo-frame-detail">
-            <span>Detalhe de tecido e movimento</span>
-          </figure>
-          <figure class="hero-slide photo-frame photo-frame-lifestyle">
-            <span>Campanha lifestyle DUO ACTIVE</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m7 15 3.2-3.2 2.8 2.8 2-2 2 2.4" />
+              <circle cx="8" cy="9" r="1.2" />
+            </svg>
+            <span>Imagem da coleção em destaque</span>
           </figure>
         </div>
       </section>
 
       <section class="section collections" id="colecoes" aria-labelledby="collections-title">
-        <div class="section-heading">
-          <p class="kicker">Coleções</p>
-          <h2 id="collections-title">Conforto para treinar. Elegância para viver.</h2>
-          <p>
-            Navegue pela coleção Essence a partir dos detalhes que fazem cada peça acompanhar seu movimento com confiança.
-          </p>
-        </div>
-        <div class="collection-grid editorial-collection-grid">
-          <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-flare">
-            <span>Close da barra</span>
-            <strong>Essence Flare</strong>
-          </a>
-          <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-sprint">
-            <span>Movimento em corrida</span>
-            <strong>Essence Sprint</strong>
-          </a>
-          <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-motion">
-            <span>Close do bolso</span>
-            <strong>Essence Motion</strong>
-          </a>
-          <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-sculpt">
-            <span>Costas da peça</span>
-            <strong>Essence Sculpt</strong>
-          </a>
-          <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-balance">
-            <span>Close do top</span>
-            <strong>Essence Balance</strong>
-          </a>
-          <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-flow">
-            <span>Frente única</span>
-            <strong>Essence Flow</strong>
-          </a>
-          <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-power">
-            <span>Top 3 em 1</span>
-            <strong>Essence Power</strong>
-          </a>
+        <div class="collections-inner">
+          <p class="collections-eyebrow">COLEÇÕES</p>
+          <h2 id="collections-title">Cada movimento merece uma escolha.</h2>
+          <div class="collection-grid editorial-collection-grid" aria-label="Coleções DUO ACTIVE">
+            <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-flare">
+              <span class="collection-image-placeholder" aria-hidden="true"></span>
+              <span class="collection-card-content">
+                <strong>ESSENCE<br />FLARE</strong>
+                <span>Ver coleção</span>
+              </span>
+              <span class="collection-arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-sprint">
+              <span class="collection-image-placeholder" aria-hidden="true"></span>
+              <span class="collection-card-content">
+                <strong>ESSENCE<br />SPRINT</strong>
+                <span>Ver coleção</span>
+              </span>
+              <span class="collection-arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-motion">
+              <span class="collection-image-placeholder" aria-hidden="true"></span>
+              <span class="collection-card-content">
+                <strong>ESSENCE<br />MOTION</strong>
+                <span>Ver coleção</span>
+              </span>
+              <span class="collection-arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-sculpt">
+              <span class="collection-image-placeholder" aria-hidden="true"></span>
+              <span class="collection-card-content">
+                <strong>ESSENCE<br />SCULPT</strong>
+                <span>Ver coleção</span>
+              </span>
+              <span class="collection-arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="collection-card collection-photo-card" href="#colecao" data-open-category="essence-balance">
+              <span class="collection-image-placeholder" aria-hidden="true"></span>
+              <span class="collection-card-content">
+                <strong>ESSENCE<br />BALANCE</strong>
+                <span>Ver coleção</span>
+              </span>
+              <span class="collection-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
         </div>
       </section>
 
