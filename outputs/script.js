@@ -37,9 +37,9 @@ const customerEmailInput = document.querySelector("[data-customer-email]");
 const CART_STORAGE_KEY = "duo-active-cart";
 const PIX_DISCOUNT_RATE = 0.05;
 const sizeOptions = [
-  { value: "Único", label: "Único - veste 36 ao 40" },
-  { value: "G", label: "G - veste 42 ao 44" },
-  { value: "GG", label: "GG - veste 44 ao 46" },
+  { value: "Único", label: "36–40" },
+  { value: "G", label: "42–44" },
+  { value: "GG", label: "44–46" },
 ];
 
 let cart = [];
@@ -324,17 +324,30 @@ const ensureProductSizeFields = () => {
     const buyRow = button.closest(".buy-row");
     if (!productCard || !buyRow) return;
 
-    if (!productCard.querySelector("[data-size-select]")) {
-      const field = document.createElement("label");
+    if (!productCard.querySelector("[data-size-pills]")) {
+      const field = document.createElement("div");
       field.className = "size-field";
       field.innerHTML = `
-        Tamanho
-        <select data-size-select aria-label="Escolha o tamanho">
-          <option value="">Escolha seu tamanho</option>
-          ${sizeOptions.map((size) => `<option value="${size.value}">${size.label}</option>`).join("")}
-        </select>
+        <span>Tamanho</span>
+        <div class="size-pill-group" data-size-pills aria-label="Escolha o tamanho">
+          ${sizeOptions
+            .map(
+              (size) => `<button class="size-pill" type="button" data-size-value="${size.value}">${size.label}</button>`
+            )
+            .join("")}
+        </div>
       `;
       buyRow.before(field);
+
+      field.querySelectorAll("[data-size-value]").forEach((sizeButton) => {
+        sizeButton.addEventListener("click", () => {
+          productCard.dataset.selectedSize = sizeButton.dataset.sizeValue;
+          field.querySelectorAll("[data-size-value]").forEach((item) => item.classList.remove("active"));
+          sizeButton.classList.add("active");
+          const message = productCard.querySelector("[data-product-message]");
+          if (message) message.textContent = "";
+        });
+      });
     }
 
     if (!productCard.querySelector("[data-product-message]")) {
@@ -350,15 +363,15 @@ const ensureProductSizeFields = () => {
 
 const addToCart = (button) => {
   const productCard = button.closest(".product-card");
-  const sizeSelect = productCard?.querySelector("[data-size-select]");
+  const firstSizeButton = productCard?.querySelector("[data-size-value]");
   const message = productCard?.querySelector("[data-product-message]");
   const title = button.dataset.title;
   const unitPrice = Number(button.dataset.price);
-  const size = sizeSelect?.value || "";
+  const size = productCard?.dataset.selectedSize || "";
 
   if (!size) {
     if (message) message.textContent = "Escolha o tamanho antes de adicionar.";
-    sizeSelect?.focus();
+    firstSizeButton?.focus();
     return;
   }
 
@@ -536,7 +549,7 @@ const startCheckout = async () => {
     const message =
       error instanceof Error
         ? error.message
-        : "Checkout indisponivel no momento. Tente novamente em alguns instantes.";
+        : "Checkout indisponível no momento. Tente novamente em alguns instantes.";
     showCartStatus(message);
     showPaymentStatus(message);
     cartCheckout.disabled = false;
@@ -581,5 +594,6 @@ document.addEventListener("keydown", (event) => {
 ensureProductSizeFields();
 loadCart();
 renderCart();
+
 
 
