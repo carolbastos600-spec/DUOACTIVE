@@ -1,8 +1,8 @@
-﻿services:
+services:
   - type: web
     name: duo-active-site
     runtime: node
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /health
     disk:
