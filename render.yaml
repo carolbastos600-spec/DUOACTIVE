@@ -5,6 +5,10 @@
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /health
+    disk:
+      name: duo-active-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: 20
@@ -26,3 +30,15 @@
         value: Duo Active <pedidos@duoactive.com.br>
       - key: MERCADO_PAGO_WEBHOOK_SECRET
         sync: false
+      - key: MELHOR_ENVIO_CLIENT_ID
+        sync: false
+      - key: MELHOR_ENVIO_CLIENT_SECRET
+        sync: false
+      - key: MELHOR_ENVIO_REDIRECT_URI
+        value: https://duoactive.com.br/api/melhor-envio/callback
+      - key: MELHOR_ENVIO_FROM_POSTAL_CODE
+        sync: false
+      - key: MELHOR_ENVIO_TOKEN_FILE
+        value: /var/data/melhor-envio-tokens.json
+      - key: MELHOR_ENVIO_TECHNICAL_EMAIL
+        value: pedidos@duoactive.com.br

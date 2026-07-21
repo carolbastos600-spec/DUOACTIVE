@@ -195,3 +195,51 @@ A rota usa idempotencia baseada no ID do pagamento do Mercado Pago (`payment-app
 
 Antes do redirecionamento ao Mercado Pago, o carrinho exige nome e e-mail da cliente. Esses dados sao enviados ao backend em POST /api/create-preference, associados ao numero do pedido e gravados nos metadados da preferencia do Mercado Pago.
 
+
+## Melhor Envio
+
+O carrinho calcula frete real pelo backend usando a API do Melhor Envio. As credenciais e tokens ficam somente no servidor; nada e exposto no HTML, CSS ou JavaScript publico.
+
+Configure no Render:
+
+```env
+MELHOR_ENVIO_CLIENT_ID=SEU_CLIENT_ID
+MELHOR_ENVIO_CLIENT_SECRET=SEU_CLIENT_SECRET
+MELHOR_ENVIO_REDIRECT_URI=https://duoactive.com.br/api/melhor-envio/callback
+MELHOR_ENVIO_FROM_POSTAL_CODE=CEP_DE_ORIGEM_DA_LOJA
+MELHOR_ENVIO_TOKEN_FILE=/var/data/melhor-envio-tokens.json
+MELHOR_ENVIO_TECHNICAL_EMAIL=pedidos@duoactive.com.br
+```
+
+Depois do deploy, abra esta rota uma vez para autorizar a loja:
+
+```text
+https://duoactive.com.br/api/melhor-envio/autorizar
+```
+
+O callback troca o codigo OAuth por access token e refresh token, grava os tokens no arquivo definido por `MELHOR_ENVIO_TOKEN_FILE` e renova o access token automaticamente no mesmo arquivo quando estiver perto de vencer. Em producao, use `/var/data/melhor-envio-tokens.json` com disco persistente no Render. O servidor cria a pasta e o arquivo automaticamente quando necessario. Nunca envie esse arquivo para o GitHub.
+
+O carrinho consulta o ViaCEP para preencher rua, bairro, cidade e estado. Depois chama `POST /api/frete/calcular`, que refaz a cotacao no Melhor Envio com produtos, quantidade, peso e dimensoes. A opcao escolhida e obrigatoria e o servidor recalcula o frete antes de criar a preferencia do Mercado Pago, impedindo alteracao do valor pelo navegador.
+
+### User-Agent
+
+As chamadas para o Melhor Envio usam:
+
+```text
+Duo Active (pedidos@duoactive.com.br)
+```
+
+Se o e-mail tecnico cadastrado no Melhor Envio for outro, configure `EMAIL_FROM` ou `MELHOR_ENVIO_TECHNICAL_EMAIL` no Render.
+
+### Peso e dimensoes dos produtos
+
+Os perfis iniciais usados para cotacao estao em `outputs/server.mjs`:
+
+- Conjunto short: 25 x 30 x 4 cm, 0,35 kg
+- Bermuda: 25 x 30 x 4 cm, 0,38 kg
+- Legging: 28 x 35 x 5 cm, 0,50 kg
+- Legging flare: 28 x 35 x 5 cm, 0,52 kg
+- Macaquinho: 28 x 35 x 5 cm, 0,48 kg
+- Top: 22 x 28 x 3 cm, 0,22 kg
+
+Antes de vender em producao, pese e meça as pecas embaladas para ajustar esses valores com precisao.
