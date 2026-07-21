@@ -18,7 +18,6 @@
   </head>
   <body>
     <header class="site-header" aria-label="Cabeçalho">
-      <div class="topbar" role="note">Frete grátis para compras acima de R$299</div>
       <div class="header-main">
         <a class="brand" href="#inicio" aria-label="DUO ACTIVE">
           <img src="assets/duo-active-logo-transparent.png" alt="DUO ACTIVE Moda Fitness" />
@@ -29,16 +28,10 @@
           <a href="#instagram">Instagram</a>
         </nav>
         <div class="header-icons" aria-label="Ações rápidas">
-          <button class="header-icon" type="button" aria-label="Buscar">
+          <button class="header-icon" type="button" aria-label="Abrir pesquisa" data-search-open>
             <svg aria-hidden="true" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="7" />
               <path d="m16.5 16.5 4 4" />
-            </svg>
-          </button>
-          <button class="header-icon" type="button" aria-label="Perfil">
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
             </svg>
           </button>
           <button class="cart-toggle header-icon" type="button" aria-label="Abrir carrinho" aria-haspopup="dialog">
@@ -52,6 +45,18 @@
             <span></span>
           </button>
         </div>
+      </div>
+      <div class="header-search" data-search-panel hidden>
+        <div class="header-search-inner" role="search">
+          <label class="sr-only" for="site-search-input">Buscar produtos</label>
+          <input id="site-search-input" type="search" placeholder="Buscar produtos..." autocomplete="off" data-search-input aria-label="Buscar produtos" />
+          <button class="search-close" type="button" aria-label="Fechar pesquisa" data-search-close>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+        <div class="search-results" data-search-results role="listbox" aria-live="polite"></div>
       </div>
     </header>
 
@@ -309,7 +314,7 @@
               <img src="assets/campaign-detail.png" alt="Macaquinho Essence Sprint costas nuas com bolsos na cor Preto" />
             </div>
             <div class="product-copy">
-              <p class="product-type">Macaquinho costas nua com bolsos</p>
+              <p class="product-type">Macaquinho Costas Nuas com bolsos</p>
               <h3>Essence Sprint</h3>
               <p><strong>Cor:</strong> Preto. Macaquinho com costas nuas, bolsos funcionais e sustentação para acompanhar treinos intensos.</p>
               <div class="color-pill-group" aria-label="Cores disponíveis para Essence Sprint">
@@ -340,7 +345,7 @@
               <img src="assets/campaign-detail.png" alt="Macaquinho Essence Sprint costas nuas com bolsos na cor Azul Marinho" />
             </div>
             <div class="product-copy">
-              <p class="product-type">Macaquinho costas nua com bolsos</p>
+              <p class="product-type">Macaquinho Costas Nuas com bolsos</p>
               <h3>Essence Sprint</h3>
               <p><strong>Cor:</strong> Azul Marinho. Macaquinho com costas nuas, bolsos funcionais e sustentação para acompanhar treinos intensos.</p>
               <div class="color-pill-group" aria-label="Cores disponíveis para Essence Sprint">
@@ -979,27 +984,10 @@
           </p>
         </div>
       </section>
-
-      <section class="section checkout" id="checkout" aria-labelledby="checkout-title">
-        <div>
-          <p class="kicker">Pagamento seguro</p>
-          <h2 id="checkout-title">Checkout Mercado Pago</h2>
-          <p>
-            O botão de compra cria uma preferência de pagamento no Mercado Pago com Pix, cartão e
-            boleto, conforme os meios ativos na sua conta.
-          </p>
-        </div>
-        <div class="payment-grid" aria-label="Meios de pagamento">
-          <span>Pix</span>
-          <span>Cartão</span>
-          <span>Boleto</span>
-        </div>
-        <p class="mp-status" role="status" aria-live="polite"></p>
-      </section>
+      <span id="checkout" class="sr-only" aria-hidden="true"></span>
       <section class="section instagram-section" id="instagram" aria-labelledby="instagram-title">
         <div class="section-heading compact">
-          <p class="kicker">Instagram</p>
-          <h2 id="instagram-title">Movimento, textura e presença real.</h2>
+          <h2 id="instagram-title">Movimento com elegância natural</h2>
           <p>
             Um espaço preparado para receber fotos editoriais da DUO ACTIVE: detalhes do tecido,
             costuras, bolsos, luz natural e momentos de autocuidado em movimento.
