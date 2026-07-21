@@ -167,11 +167,11 @@ const normalizeOrderItems = (payload) => {
 
 
 const productShippingProfiles = [
-  { match: /aura|short/i, width: 25, height: 4, length: 30, weight: 0.35 },
-  { match: /bermuda/i, width: 25, height: 4, length: 30, weight: 0.38 },
-  { match: /flare/i, width: 28, height: 5, length: 35, weight: 0.52 },
-  { match: /legging/i, width: 28, height: 5, length: 35, weight: 0.5 },
-  { match: /macaquinho/i, width: 28, height: 5, length: 35, weight: 0.48 },
+  { match: /essence\s*flare|flare/i, width: 28, height: 5, length: 35, weight: 0.52 },
+  { match: /essence\s*sprint|essence\s*sculpt|macaquinho/i, width: 28, height: 5, length: 35, weight: 0.48 },
+  { match: /essence\s*motion|bermuda/i, width: 25, height: 4, length: 30, weight: 0.38 },
+  { match: /essence\s*balance|essence\s*flow|short/i, width: 25, height: 4, length: 30, weight: 0.35 },
+  { match: /essence\s*power|legging/i, width: 28, height: 5, length: 35, weight: 0.5 },
   { match: /top/i, width: 22, height: 3, length: 28, weight: 0.22 },
 ];
 const defaultShippingProfile = { width: 28, height: 5, length: 35, weight: 0.5 };

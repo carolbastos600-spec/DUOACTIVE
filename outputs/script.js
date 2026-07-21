@@ -37,7 +37,7 @@ const customerEmailInput = document.querySelector("[data-customer-email]");
 const CART_STORAGE_KEY = "duo-active-cart";
 const PIX_DISCOUNT_RATE = 0.05;
 const sizeOptions = [
-  { value: "Unico", label: "Unico - veste 36 ao 40" },
+  { value: "Único", label: "Único - veste 36 ao 40" },
   { value: "G", label: "G - veste 42 ao 44" },
   { value: "GG", label: "GG - veste 44 ao 46" },
 ];
@@ -239,9 +239,9 @@ const renderShippingOptions = (options = []) => {
 
 const updatePaymentNote = () => {
   if (selectedPaymentMethod === "pix") {
-    paymentNote.textContent = "Voce economiza 5% pagando via PIX.";
+    paymentNote.textContent = "Você economiza 5% pagando via PIX.";
   } else {
-    paymentNote.textContent = "Parcele em ate 6x.";
+    paymentNote.textContent = "Parcele em até 6x.";
   }
 };
 
@@ -306,14 +306,14 @@ const updateCartItem = (id, action) => {
   if (action === "decrease") item.quantity -= 1;
 
   cart = cart.filter((cartItem) => cartItem.quantity > 0);
-  resetShipping("Calcule o frete novamente apos alterar a quantidade.");
+  resetShipping("Calcule o frete novamente após alterar a quantidade.");
   saveCart();
   renderCart();
 };
 
 const removeCartItem = (id) => {
   cart = cart.filter((item) => item.id !== id);
-  resetShipping("Calcule o frete novamente apos remover um produto.");
+  resetShipping("Calcule o frete novamente após remover um produto.");
   saveCart();
   renderCart();
 };
@@ -363,7 +363,7 @@ const addToCart = (button) => {
   }
 
   if (!title || !Number.isFinite(unitPrice) || unitPrice <= 0) {
-    if (message) message.textContent = "Nao foi possivel adicionar este produto.";
+    if (message) message.textContent = "Não foi possível adicionar este produto.";
     return;
   }
 
@@ -411,7 +411,7 @@ const calculateShipping = async () => {
   try {
     const viaCepResponse = await fetch(`https://viacep.com.br/ws/${zip}/json/`);
     const viaCep = await viaCepResponse.json();
-    if (!viaCepResponse.ok || viaCep.erro) throw new Error("CEP nao encontrado.");
+    if (!viaCepResponse.ok || viaCep.erro) throw new Error("CEP não encontrado.");
 
     selectedShippingAddress = {
       postal_code: zip,
@@ -437,12 +437,12 @@ const calculateShipping = async () => {
       }),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "Nao foi possivel calcular o frete.");
+    if (!response.ok) throw new Error(data.error || "Não foi possível calcular o frete.");
 
     renderShippingOptions(data.options || []);
-    shippingMessage.textContent = "Escolha uma opcao de entrega.";
+    shippingMessage.textContent = "Escolha uma opção de entrega.";
   } catch (error) {
-    resetShipping(error instanceof Error ? error.message : "Nao foi possivel calcular o frete.");
+    resetShipping(error instanceof Error ? error.message : "Não foi possível calcular o frete.");
   } finally {
     shippingButton.disabled = false;
     renderCart();
@@ -453,8 +453,8 @@ const applyCoupon = () => {
   const couponCode = couponInput.value.trim();
   couponDiscount = 0;
   couponMessage.textContent = couponCode
-    ? "Cupom ainda nao disponivel para esta compra."
-    : "Digite um cupom para aplicar quando a promocao estiver ativa.";
+    ? "Cupom ainda não disponível para esta compra."
+    : "Digite um cupom para aplicar quando a promoção estiver ativa.";
   renderCart();
 };
 
@@ -474,13 +474,13 @@ const startCheckout = async () => {
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
-    showCartStatus("Informe um e-mail valido para receber os dados do pedido.");
+    showCartStatus("Informe um e-mail válido para receber os dados do pedido.");
     customerEmailInput.focus();
     return;
   }
 
   if (!selectedShippingOption || !selectedShippingAddress) {
-    showCartStatus("Calcule o frete e selecione uma opcao de entrega.");
+    showCartStatus("Calcule o frete e selecione uma opção de entrega.");
     zipInput.focus();
     return;
   }
@@ -528,7 +528,7 @@ const startCheckout = async () => {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok || !data.init_point) {
-      throw new Error(data.error || "Nao foi possivel iniciar o pagamento.");
+      throw new Error(data.error || "Não foi possível iniciar o pagamento.");
     }
 
     window.location.href = data.init_point;
