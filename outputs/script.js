@@ -26,6 +26,8 @@ const paymentNote = document.querySelector("[data-payment-note]");
 const zipInput = document.querySelector("[data-zip-input]");
 const shippingButton = document.querySelector("[data-shipping-button]");
 const shippingMessage = document.querySelector("[data-shipping-message]");
+const shippingAddress = document.querySelector("[data-shipping-address]");
+const shippingOptions = document.querySelector("[data-shipping-options]");
 const couponInput = document.querySelector("[data-coupon-input]");
 const couponButton = document.querySelector("[data-coupon-button]");
 const couponMessage = document.querySelector("[data-coupon-message]");
@@ -43,6 +45,8 @@ const sizeOptions = [
 let cart = [];
 let selectedPaymentMethod = "pix";
 let shippingAmount = 0;
+let selectedShippingOption = null;
+let selectedShippingAddress = null;
 let couponDiscount = 0;
 
 const syncHeader = () => {
@@ -182,6 +186,57 @@ const showPaymentStatus = (message = "") => {
   if (paymentStatus) paymentStatus.textContent = message;
 };
 
+const resetShipping = (message = "Calcule o frete para continuar.") => {
+  shippingAmount = 0;
+  selectedShippingOption = null;
+  selectedShippingAddress = null;
+  if (shippingMessage) shippingMessage.textContent = message;
+  if (shippingAddress) {
+    shippingAddress.hidden = true;
+    shippingAddress.textContent = "";
+  }
+  if (shippingOptions) shippingOptions.innerHTML = "";
+};
+
+const renderShippingAddress = () => {
+  if (!shippingAddress || !selectedShippingAddress) return;
+  const parts = [
+    selectedShippingAddress.street,
+    selectedShippingAddress.neighborhood,
+    selectedShippingAddress.city && selectedShippingAddress.state
+      ? `${selectedShippingAddress.city}/${selectedShippingAddress.state}`
+      : selectedShippingAddress.city,
+  ].filter(Boolean);
+  shippingAddress.textContent = `${parts.join(" - ")} | CEP ${selectedShippingAddress.postal_code}`;
+  shippingAddress.hidden = false;
+};
+
+const renderShippingOptions = (options = []) => {
+  if (!shippingOptions) return;
+  shippingOptions.innerHTML = options
+    .map(
+      (option) => `
+        <label class="shipping-option">
+          <input type="radio" name="shippingOption" value="${escapeHtml(option.service_id)}" data-shipping-option />
+          <span>
+            <strong>${escapeHtml(option.company)} - ${escapeHtml(option.name)}</strong>
+            <small>${option.delivery_time || "-"} dias uteis</small>
+          </span>
+          <b>${formatMoney(option.price)}</b>
+        </label>
+      `
+    )
+    .join("");
+
+  shippingOptions.querySelectorAll("[data-shipping-option]").forEach((input) => {
+    input.addEventListener("change", () => {
+      selectedShippingOption = options.find((option) => option.service_id === input.value) || null;
+      shippingAmount = selectedShippingOption ? selectedShippingOption.price : 0;
+      renderCart();
+    });
+  });
+};
+
 const updatePaymentNote = () => {
   if (selectedPaymentMethod === "pix") {
     paymentNote.textContent = "Voce economiza 5% pagando via PIX.";
@@ -251,12 +306,14 @@ const updateCartItem = (id, action) => {
   if (action === "decrease") item.quantity -= 1;
 
   cart = cart.filter((cartItem) => cartItem.quantity > 0);
+  resetShipping("Calcule o frete novamente apos alterar a quantidade.");
   saveCart();
   renderCart();
 };
 
 const removeCartItem = (id) => {
   cart = cart.filter((item) => item.id !== id);
+  resetShipping("Calcule o frete novamente apos remover um produto.");
   saveCart();
   renderCart();
 };
@@ -325,6 +382,7 @@ const addToCart = (button) => {
     });
   }
 
+  resetShipping("Calcule o frete para continuar.");
   saveCart();
   renderCart();
   showCartStatus("");
@@ -332,18 +390,63 @@ const addToCart = (button) => {
   openCart();
 };
 
-const calculateShipping = () => {
+const calculateShipping = async () => {
   const zip = zipInput.value.replace(/\D/g, "");
 
-  if (zip && zip.length !== 8) {
+  if (!cart.length) {
+    shippingMessage.textContent = "Adicione produtos ao carrinho antes de calcular o frete.";
+    return;
+  }
+
+  if (zip.length !== 8) {
     shippingMessage.textContent = "Confira o CEP digitado.";
     zipInput.focus();
     return;
   }
 
-  shippingAmount = 0;
-  shippingMessage.textContent = "Frete calculado na proxima atualizacao.";
+  resetShipping("Calculando frete...");
   renderCart();
+  shippingButton.disabled = true;
+
+  try {
+    const viaCepResponse = await fetch(`https://viacep.com.br/ws/${zip}/json/`);
+    const viaCep = await viaCepResponse.json();
+    if (!viaCepResponse.ok || viaCep.erro) throw new Error("CEP nao encontrado.");
+
+    selectedShippingAddress = {
+      postal_code: zip,
+      street: viaCep.logradouro || "",
+      neighborhood: viaCep.bairro || "",
+      city: viaCep.localidade || "",
+      state: viaCep.uf || "",
+    };
+    renderShippingAddress();
+
+    const response = await fetch("/api/frete/calcular", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        postal_code: zip,
+        address: selectedShippingAddress,
+        items: cart.map((item) => ({
+          title: item.title,
+          size: item.size,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        })),
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Nao foi possivel calcular o frete.");
+
+    renderShippingOptions(data.options || []);
+    shippingMessage.textContent = "Escolha uma opcao de entrega.";
+  } catch (error) {
+    resetShipping(error instanceof Error ? error.message : "Nao foi possivel calcular o frete.");
+  } finally {
+    shippingButton.disabled = false;
+    renderCart();
+  }
 };
 
 const applyCoupon = () => {
@@ -376,6 +479,12 @@ const startCheckout = async () => {
     return;
   }
 
+  if (!selectedShippingOption || !selectedShippingAddress) {
+    showCartStatus("Calcule o frete e selecione uma opcao de entrega.");
+    zipInput.focus();
+    return;
+  }
+
   const summary = getOrderSummary();
   cartCheckout.disabled = true;
   cartCheckout.textContent = "Abrindo pagamento...";
@@ -395,6 +504,11 @@ const startCheckout = async () => {
         },
         payment_method: selectedPaymentMethod,
         shipping: summary.shipping,
+        shipping_quote: {
+          ...selectedShippingOption,
+          postal_code: selectedShippingAddress.postal_code,
+          address: selectedShippingAddress,
+        },
         coupon_code: couponInput.value.trim(),
         items: cart.map((item) => ({
           title: item.title,
@@ -458,6 +572,7 @@ cartClose.addEventListener("click", closeCart);
 cartBackdrop.addEventListener("click", closeCart);
 cartCheckout.addEventListener("click", startCheckout);
 shippingButton.addEventListener("click", calculateShipping);
+zipInput.addEventListener("input", () => resetShipping("Calcule o frete para continuar."));
 couponButton.addEventListener("click", applyCoupon);
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeCart();

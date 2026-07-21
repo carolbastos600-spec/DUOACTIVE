@@ -1,7 +1,7 @@
 ﻿import { createServer } from "node:http";
-import { createHmac, timingSafeEqual } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
-import { extname, join, normalize } from "node:path";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Resend } from "resend";
 
@@ -33,9 +33,18 @@ const host = process.env.HOST || "0.0.0.0";
 const publicBaseUrl = process.env.PUBLIC_BASE_URL || `http://127.0.0.1:${port}`;
 const emailFrom = process.env.EMAIL_FROM || "Duo Active <pedidos@duoactive.com.br>";
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const melhorEnvioBaseUrl = (process.env.MELHOR_ENVIO_BASE_URL || "https://www.melhorenvio.com.br").replace(/\/$/, "");
+const melhorEnvioTechnicalEmail =
+  process.env.MELHOR_ENVIO_TECHNICAL_EMAIL ||
+  emailFrom.match(/<([^>]+)>/)?.[1] ||
+  emailFrom.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ||
+  "pedidos@duoactive.com.br";
+const melhorEnvioUserAgent = `Duo Active (${melhorEnvioTechnicalEmail})`;
 
 const ordersByNumber = new Map();
 const emailIdempotencyPath = join(root, ".email-idempotency.json");
+const melhorEnvioTokensPath = process.env.MELHOR_ENVIO_TOKEN_FILE || join(root, ".melhor-envio-tokens.json");
+const melhorEnvioStatePath = join(root, ".melhor-envio-oauth-state.json");
 let sentEmailKeys = new Set();
 
 const mimeTypes = {
@@ -156,7 +165,227 @@ const normalizeOrderItems = (payload) => {
   });
 };
 
-const normalizePreferenceItems = (payload) => {
+
+const productShippingProfiles = [
+  { match: /aura|short/i, width: 25, height: 4, length: 30, weight: 0.35 },
+  { match: /bermuda/i, width: 25, height: 4, length: 30, weight: 0.38 },
+  { match: /flare/i, width: 28, height: 5, length: 35, weight: 0.52 },
+  { match: /legging/i, width: 28, height: 5, length: 35, weight: 0.5 },
+  { match: /macaquinho/i, width: 28, height: 5, length: 35, weight: 0.48 },
+  { match: /top/i, width: 22, height: 3, length: 28, weight: 0.22 },
+];
+const defaultShippingProfile = { width: 28, height: 5, length: 35, weight: 0.5 };
+
+const sanitizePostalCode = (value) => String(value || "").replace(/\D/g, "");
+
+const getProductShippingProfile = (title) =>
+  productShippingProfiles.find((profile) => profile.match.test(String(title || ""))) || defaultShippingProfile;
+
+const normalizeAddress = (address = {}, postalCode = "") => ({
+  postal_code: sanitizePostalCode(address.postal_code || postalCode),
+  street: String(address.street || address.logradouro || "").trim(),
+  neighborhood: String(address.neighborhood || address.bairro || "").trim(),
+  city: String(address.city || address.localidade || "").trim(),
+  state: String(address.state || address.uf || "").trim().toUpperCase(),
+});
+
+const hasMelhorEnvioCredentials = () =>
+  Boolean(
+    process.env.MELHOR_ENVIO_CLIENT_ID &&
+      process.env.MELHOR_ENVIO_CLIENT_SECRET &&
+      process.env.MELHOR_ENVIO_REDIRECT_URI &&
+      process.env.MELHOR_ENVIO_FROM_POSTAL_CODE
+  );
+
+const ensureMelhorEnvioTokenFile = async () => {
+  await mkdir(dirname(melhorEnvioTokensPath), { recursive: true });
+  try {
+    await readFile(melhorEnvioTokensPath, "utf8");
+  } catch {
+    await writeFile(melhorEnvioTokensPath, JSON.stringify({ created_at: new Date().toISOString() }, null, 2));
+  }
+};
+
+const readMelhorEnvioTokens = async () => {
+  await ensureMelhorEnvioTokenFile();
+  try {
+    return JSON.parse(await readFile(melhorEnvioTokensPath, "utf8"));
+  } catch {
+    return null;
+  }
+};
+
+const writeMelhorEnvioTokens = async (tokens) => {
+  await ensureMelhorEnvioTokenFile();
+  const expiresIn = Number(tokens.expires_in || 0);
+  const currentTokens = (await readMelhorEnvioTokens()) || {};
+  const normalized = {
+    ...currentTokens,
+    ...tokens,
+    access_token: tokens.access_token || currentTokens.access_token,
+    refresh_token: tokens.refresh_token || currentTokens.refresh_token,
+    expires_at: expiresIn ? Date.now() + expiresIn * 1000 : tokens.expires_at || currentTokens.expires_at,
+    updated_at: new Date().toISOString(),
+  };
+  await writeFile(melhorEnvioTokensPath, JSON.stringify(normalized, null, 2));
+  return normalized;
+};
+
+const persistMelhorEnvioState = async (state) => {
+  await writeFile(melhorEnvioStatePath, JSON.stringify({ state, created_at: new Date().toISOString() }, null, 2));
+};
+
+const readMelhorEnvioState = async () => {
+  try {
+    return JSON.parse(await readFile(melhorEnvioStatePath, "utf8"));
+  } catch {
+    return null;
+  }
+};
+
+const requestMelhorEnvioToken = async (params) => {
+  const body = new URLSearchParams({
+    client_id: process.env.MELHOR_ENVIO_CLIENT_ID || "",
+    client_secret: process.env.MELHOR_ENVIO_CLIENT_SECRET || "",
+    redirect_uri: process.env.MELHOR_ENVIO_REDIRECT_URI || "",
+    ...params,
+  });
+
+  const tokenResponse = await fetch(`${melhorEnvioBaseUrl}/oauth/token`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": melhorEnvioUserAgent,
+    },
+    body,
+  });
+
+  const tokenPayload = await tokenResponse.json().catch(() => ({}));
+  if (!tokenResponse.ok) {
+    throw new Error(tokenPayload.message || "Nao foi possivel autenticar no Melhor Envio.");
+  }
+
+  return writeMelhorEnvioTokens(tokenPayload);
+};
+
+const getMelhorEnvioAccessToken = async () => {
+  if (!hasMelhorEnvioCredentials()) {
+    throw new Error("Configure as variaveis do Melhor Envio no Render.");
+  }
+
+  const tokens = await readMelhorEnvioTokens();
+  if (!tokens?.access_token || !tokens?.refresh_token) {
+    const error = new Error("Autorize a integracao com o Melhor Envio antes de calcular o frete.");
+    error.code = "MELHOR_ENVIO_NOT_AUTHORIZED";
+    throw error;
+  }
+
+  if (Number(tokens.expires_at || 0) > Date.now() + 5 * 60 * 1000) {
+    return tokens.access_token;
+  }
+
+  const refreshed = await requestMelhorEnvioToken({
+    grant_type: "refresh_token",
+    refresh_token: tokens.refresh_token,
+  });
+  return refreshed.access_token;
+};
+
+const buildMelhorEnvioProducts = (payload) =>
+  normalizeOrderItems(payload).map((item) => {
+    const profile = getProductShippingProfile(item.title);
+    return {
+      id: `${item.title}-${item.size}`,
+      width: profile.width,
+      height: profile.height,
+      length: profile.length,
+      weight: profile.weight,
+      insurance_value: item.unit_price,
+      quantity: item.quantity,
+    };
+  });
+
+const quoteMelhorEnvioShipping = async ({ postalCode, items }) => {
+  const toPostalCode = sanitizePostalCode(postalCode);
+  const fromPostalCode = sanitizePostalCode(process.env.MELHOR_ENVIO_FROM_POSTAL_CODE);
+
+  if (toPostalCode.length !== 8) throw new Error("Informe um CEP valido para calcular o frete.");
+  if (fromPostalCode.length !== 8) throw new Error("Configure MELHOR_ENVIO_FROM_POSTAL_CODE com o CEP de origem da loja.");
+
+  const accessToken = await getMelhorEnvioAccessToken();
+  const products = buildMelhorEnvioProducts({ items });
+
+  const freightResponse = await fetch(`${melhorEnvioBaseUrl}/api/v2/me/shipment/calculate`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "User-Agent": melhorEnvioUserAgent,
+    },
+    body: JSON.stringify({
+      from: { postal_code: fromPostalCode },
+      to: { postal_code: toPostalCode },
+      products,
+      options: {
+        receipt: false,
+        own_hand: false,
+        insurance_value: products.reduce((total, product) => total + Number(product.insurance_value || 0) * product.quantity, 0),
+        use_insurance_value: true,
+      },
+    }),
+  });
+
+  const freightPayload = await freightResponse.json().catch(() => ({}));
+  if (!freightResponse.ok) {
+    throw new Error(freightPayload.message || "Nao foi possivel calcular o frete no Melhor Envio.");
+  }
+
+  const options = (Array.isArray(freightPayload) ? freightPayload : [])
+    .filter((option) => !option.error)
+    .map((option) => {
+      const price = roundMoney(option.custom_price ?? option.price);
+      return {
+        service_id: String(option.id),
+        company: option.company?.name || "Melhor Envio",
+        name: option.name || "Entrega",
+        price,
+        delivery_time: Number(option.custom_delivery_time ?? option.delivery_time ?? 0),
+      };
+    })
+    .filter((option) => Number.isFinite(option.price) && option.price > 0)
+    .sort((a, b) => a.price - b.price);
+
+  if (!options.length) throw new Error("Nao encontramos opcoes de entrega para este CEP.");
+  return options;
+};
+
+const validateShippingQuote = async (payload) => {
+  const selected = payload.shipping_quote || {};
+  const postalCode = sanitizePostalCode(selected.postal_code || selected.address?.postal_code);
+  const serviceId = String(selected.service_id || "");
+
+  if (!postalCode || postalCode.length !== 8) throw new Error("Calcule o frete antes de continuar.");
+  if (!serviceId) throw new Error("Selecione uma opcao de entrega antes de continuar.");
+
+  const availableOptions = await quoteMelhorEnvioShipping({ postalCode, items: payload.items });
+  const option = availableOptions.find((item) => item.service_id === serviceId);
+  if (!option) throw new Error("A opcao de frete selecionada nao esta mais disponivel. Calcule novamente.");
+
+  const browserPrice = Number(selected.price);
+  if (!Number.isFinite(browserPrice) || Math.abs(roundMoney(browserPrice) - option.price) > 0.01) {
+    throw new Error("O valor do frete mudou. Calcule o frete novamente.");
+  }
+
+  return {
+    ...option,
+    postal_code: postalCode,
+    address: normalizeAddress(selected.address, postalCode),
+  };
+};
+
+const normalizePreferenceItems = (payload, shippingQuote = null) => {
   const paymentMethod = getPaymentMethod(payload);
   const orderItems = normalizeOrderItems(payload);
 
@@ -173,7 +402,7 @@ const normalizePreferenceItems = (payload) => {
     };
   });
 
-  const shipping = roundMoney(payload.shipping || 0);
+  const shipping = roundMoney(shippingQuote?.price || 0);
 
   if (shipping > 0) {
     items.push({
@@ -187,11 +416,11 @@ const normalizePreferenceItems = (payload) => {
   return items;
 };
 
-const buildOrder = (payload, orderNumber) => {
+const buildOrder = (payload, orderNumber, shippingQuote = null) => {
   const customer = normalizeCustomer(payload);
   const items = normalizeOrderItems(payload);
   const subtotal = roundMoney(items.reduce((total, item) => total + item.line_total, 0));
-  const shipping = roundMoney(payload.shipping || 0);
+  const shipping = roundMoney(shippingQuote?.price || 0);
   const paymentMethod = getPaymentMethod(payload);
   const pixDiscount = paymentMethod === "pix" ? roundMoney(subtotal * PIX_DISCOUNT_RATE) : 0;
   const couponDiscount = roundMoney(payload.summary?.coupon_discount || 0);
@@ -204,6 +433,8 @@ const buildOrder = (payload, orderNumber) => {
     paymentMethod,
     couponCode: String(payload.coupon_code || "").trim(),
     summary: { subtotal, shipping, pixDiscount, couponDiscount, total },
+    shipping: shippingQuote,
+    address: shippingQuote?.address || null,
     createdAt: new Date().toISOString(),
   };
 };
@@ -253,10 +484,26 @@ const layoutEmail = ({ title, preview, content }) => `<!doctype html>
   </body>
 </html>`;
 
+const orderShippingHtml = (order) => {
+  if (!order.shipping) return "";
+  const address = order.address || order.shipping.address || {};
+  const addressLine = [address.street, address.neighborhood, address.city && address.state ? `${address.city}/${address.state}` : address.city]
+    .filter(Boolean)
+    .join(" - ");
+  return `
+    <div style="margin-top:18px;padding:14px 16px;background:#f8f5ef;border:1px solid #e8e2d8;border-radius:6px;line-height:1.55;">
+      <strong>Entrega</strong><br />
+      ${escapeHtml(order.shipping.company)} - ${escapeHtml(order.shipping.name)} · ${escapeHtml(order.shipping.delivery_time || "-")} dias uteis<br />
+      ${addressLine ? escapeHtml(addressLine) + "<br />" : ""}
+      CEP ${escapeHtml(address.postal_code || order.shipping.postal_code || "")}
+    </div>`;
+};
+
 const orderSummaryHtml = (order) => `
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:18px;border-collapse:collapse;">
     ${orderRowsHtml(order.items)}
   </table>
+  ${orderShippingHtml(order)}
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:18px;">
     <tr><td style="padding:5px 0;color:#777777;">Subtotal</td><td align="right" style="padding:5px 0;">${formatMoney(order.summary.subtotal)}</td></tr>
     <tr><td style="padding:5px 0;color:#777777;">Frete</td><td align="right" style="padding:5px 0;">${formatMoney(order.summary.shipping)}</td></tr>
@@ -404,6 +651,74 @@ const orderFromPaymentFallback = (payment) => {
   };
 };
 
+
+const handleMelhorEnvioAuthorize = async (request, response) => {
+  try {
+    if (!hasMelhorEnvioCredentials()) {
+      sendJson(response, 500, { error: "Configure as variaveis do Melhor Envio no Render." });
+      return;
+    }
+
+    const state = randomBytes(16).toString("hex");
+    await persistMelhorEnvioState(state);
+    const authorizeUrl = new URL(`${melhorEnvioBaseUrl}/oauth/authorize`);
+    authorizeUrl.searchParams.set("client_id", process.env.MELHOR_ENVIO_CLIENT_ID);
+    authorizeUrl.searchParams.set("redirect_uri", process.env.MELHOR_ENVIO_REDIRECT_URI);
+    authorizeUrl.searchParams.set("response_type", "code");
+    authorizeUrl.searchParams.set("state", state);
+    authorizeUrl.searchParams.set("scope", "shipping-calculate");
+
+    response.writeHead(302, { Location: authorizeUrl.toString() });
+    response.end();
+  } catch (error) {
+    sendJson(response, 500, { error: error instanceof Error ? error.message : "Erro ao autorizar Melhor Envio." });
+  }
+};
+
+const handleMelhorEnvioCallback = async (request, response, url) => {
+  try {
+    const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state");
+    const savedState = await readMelhorEnvioState();
+
+    if (!code) throw new Error("Callback do Melhor Envio sem codigo de autorizacao.");
+    if (!state || !savedState?.state || state !== savedState.state) throw new Error("Estado OAuth invalido no Melhor Envio.");
+
+    await requestMelhorEnvioToken({ grant_type: "authorization_code", code });
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    response.end("<!doctype html><html lang=\"pt-BR\"><body style=\"font-family:Arial,sans-serif;background:#f8f5ef;color:#1e1e1e;padding:32px;\"><h1>Melhor Envio autorizado</h1><p>A integracao de frete da DUO ACTIVE foi conectada com sucesso. Voce ja pode voltar ao site.</p></body></html>");
+  } catch (error) {
+    response.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
+    response.end("<!doctype html><html lang=\"pt-BR\"><body style=\"font-family:Arial,sans-serif;background:#f8f5ef;color:#1e1e1e;padding:32px;\"><h1>Nao foi possivel conectar</h1><p>" + escapeHtml(error instanceof Error ? error.message : "Erro no Melhor Envio.") + "</p></body></html>");
+  }
+};
+
+const handleCalculateShipping = async (request, response) => {
+  try {
+    const payload = await readJsonBody(request);
+    const postalCode = sanitizePostalCode(payload.postal_code);
+    const items = Array.isArray(payload.items) ? payload.items : [];
+
+    if (!items.length) {
+      sendJson(response, 400, { error: "Adicione produtos ao carrinho antes de calcular o frete." });
+      return;
+    }
+
+    const options = await quoteMelhorEnvioShipping({ postalCode, items });
+    sendJson(response, 200, {
+      address: normalizeAddress(payload.address, postalCode),
+      options,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro ao calcular frete.";
+    const status = error?.code === "MELHOR_ENVIO_NOT_AUTHORIZED" ? 401 : message.includes("Configure") ? 500 : 400;
+    sendJson(response, status, {
+      error: message,
+      authorization_url: status === 401 ? "/api/melhor-envio/autorizar" : undefined,
+    });
+  }
+};
+
 const createPreference = async (request, response) => {
   if (!process.env.MERCADO_PAGO_ACCESS_TOKEN) {
     sendJson(response, 500, { error: "Configure MERCADO_PAGO_ACCESS_TOKEN no Render para ativar o checkout." });
@@ -413,9 +728,10 @@ const createPreference = async (request, response) => {
   try {
     const payload = await readJsonBody(request);
     const paymentMethod = getPaymentMethod(payload);
+    const shippingQuote = await validateShippingQuote(payload);
     const orderNumber = makeOrderNumber();
-    const order = buildOrder(payload, orderNumber);
-    const items = normalizePreferenceItems(payload);
+    const order = buildOrder(payload, orderNumber, shippingQuote);
+    const items = normalizePreferenceItems(payload, shippingQuote);
 
     if (!items.length) {
       sendJson(response, 400, { error: "Adicione produtos ao carrinho antes de finalizar." });
@@ -445,6 +761,13 @@ const createPreference = async (request, response) => {
           coupon_code: order.couponCode,
           subtotal: order.summary.subtotal,
           shipping: order.summary.shipping,
+          shipping_service_id: order.shipping?.service_id,
+          shipping_company: order.shipping?.company,
+          shipping_mode: order.shipping?.name,
+          shipping_delivery_time: order.shipping?.delivery_time,
+          shipping_postal_code: order.shipping?.postal_code,
+          shipping_city: order.address?.city,
+          shipping_state: order.address?.state,
           pix_discount: order.summary.pixDiscount,
           coupon_discount: order.summary.couponDiscount,
           total: order.summary.total,
@@ -576,24 +899,45 @@ const serveStatic = async (request, response) => {
 
 createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
+  const routePath = url.pathname.replace(/\/+$/, "") || "/";
 
-  if (request.method === "GET" && url.pathname === "/health") {
+  if (request.method === "GET" && routePath === "/health") {
     sendJson(response, 200, { status: "ok" });
     return;
   }
 
-  if (request.method === "POST" && url.pathname === "/api/create-preference") {
+  if (request.method === "GET" && routePath === "/api/melhor-envio/autorizar") {
+    await handleMelhorEnvioAuthorize(request, response);
+    return;
+  }
+
+  if (request.method === "GET" && routePath === "/api/melhor-envio/callback") {
+    await handleMelhorEnvioCallback(request, response, url);
+    return;
+  }
+
+  if (request.method === "POST" && routePath === "/api/frete/calcular") {
+    await handleCalculateShipping(request, response);
+    return;
+  }
+
+  if (request.method === "POST" && routePath === "/api/create-preference") {
     await createPreference(request, response);
     return;
   }
 
-  if (request.method === "POST" && url.pathname === "/api/webhooks/mercadopago") {
+  if (request.method === "POST" && routePath === "/api/webhooks/mercadopago") {
     await handleMercadoPagoWebhook(request, response);
     return;
   }
 
-  if (request.method === "POST" && url.pathname === "/api/orders/send-shipped-email") {
+  if (request.method === "POST" && routePath === "/api/orders/send-shipped-email") {
     await handleOrderShippedEmail(request, response);
+    return;
+  }
+
+  if (routePath.startsWith("/api/")) {
+    sendJson(response, 404, { error: "Rota de API nao encontrada." });
     return;
   }
 

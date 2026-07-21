@@ -1105,6 +1105,57 @@ body.cart-open {
   cursor: pointer;
 }
 
+.field-row button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.shipping-address {
+  padding: 12px 14px;
+  color: var(--muted);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.shipping-options {
+  display: grid;
+  gap: 10px;
+}
+
+.shipping-option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 58px;
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.shipping-option input {
+  accent-color: var(--brown-dark);
+}
+
+.shipping-option span {
+  display: grid;
+  gap: 3px;
+}
+
+.shipping-option small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.shipping-option b {
+  white-space: nowrap;
+}
+
 .cart-summary {
   display: grid;
   gap: 10px;
