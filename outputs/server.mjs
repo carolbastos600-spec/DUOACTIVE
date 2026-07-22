@@ -4,6 +4,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Resend } from "resend";
+import { closePool, query } from "../db.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
@@ -876,6 +877,22 @@ const handleOrderShippedEmail = async (request, response) => {
 
 await loadEmailIdempotency();
 
+const verifyDatabaseConnection = async () => {
+  if (!process.env.DATABASE_URL) {
+    console.log("DATABASE_URL não configurada. O servidor continuará sem conexão com PostgreSQL.");
+    return;
+  }
+
+  try {
+    await query("SELECT NOW() as current_time");
+    console.log("Conexão com PostgreSQL OK.");
+  } catch (error) {
+    console.warn("Não foi possível conectar ao PostgreSQL no startup.", error instanceof Error ? error.message : error);
+  }
+};
+
+await verifyDatabaseConnection();
+
 const serveStatic = async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
   const requestedPath = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
@@ -897,7 +914,7 @@ const serveStatic = async (request, response) => {
   }
 };
 
-createServer(async (request, response) => {
+const server = createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
   const routePath = url.pathname.replace(/\/+$/, "") || "/";
 
@@ -948,8 +965,22 @@ createServer(async (request, response) => {
 
   response.writeHead(405);
   response.end("Metodo nao permitido");
-}).listen(port, host, () => {
+});
+
+server.listen(port, host, () => {
   console.log(`DUO ACTIVE disponivel em http://${host}:${port}/`);
+});
+
+process.on("SIGTERM", async () => {
+  server.close();
+  await closePool();
+  process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+  server.close();
+  await closePool();
+  process.exit(0);
 });
 
 

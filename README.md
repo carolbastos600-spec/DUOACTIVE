@@ -152,6 +152,38 @@ Rodar local:
 ```powershell
 npm start
 ```
+
+## Configuração do PostgreSQL
+
+A infraestrutura inicial de banco foi preparada para aceitar PostgreSQL sem alterar o fluxo atual do site.
+
+### Criar o banco no Render
+
+1. Crie um serviço PostgreSQL no Render.
+2. Copie a URL de conexão fornecida pelo Render.
+3. Defina a variável de ambiente `DATABASE_URL` no serviço da aplicação.
+
+### Configuração local
+
+1. Defina `DATABASE_URL` em seu arquivo de ambiente local.
+2. Execute:
+
+```powershell
+npm run db:test
+```
+
+3. Execute as migrations:
+
+```powershell
+npm run db:migrate
+```
+
+### Avisos importantes
+
+- Não execute migrations em produção sem revisão prévia.
+- O servidor atual continua iniciando normalmente mesmo sem `DATABASE_URL` configurada.
+- Esta etapa só prepara a infraestrutura de banco; ainda não há controle de estoque, baixa automática ou painel administrativo.
+
 ## E-mails transacionais com Resend
 
 O projeto usa o SDK oficial do Resend para enviar e-mails transacionais pelo backend. Nenhuma chave fica no navegador.

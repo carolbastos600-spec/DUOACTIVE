@@ -8,7 +8,9 @@
     "start": "node outputs/server.mjs",
     "dev": "node outputs/server.mjs",
     "build": "node --check outputs/server.mjs && node --check outputs/script.js",
-    "check": "node --check outputs/server.mjs && node --check outputs/script.js"
+    "check": "node --check outputs/server.mjs && node --check outputs/script.js",
+    "db:migrate": "node scripts/run-migrations.mjs",
+    "db:test": "node scripts/test-database.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -22,6 +24,7 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "pg": "^8.12.0",
     "resend": "^6.17.2"
   }
 }
